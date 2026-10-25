@@ -22,7 +22,54 @@
 @media(max-width:600px){.appNav{padding:10px 12px}.appNav a{padding:9px 11px;font-size:.9rem}.workspace{padding:16px 12px 35px}}
 </style>
 </head>
-<body><header class="topbar"><span>✦ WanderWise</span></header><main>
+<body><header class="topbar"><span>✦ WanderWise</span>
+<style>
+.auth-tools{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}.auth-tools button{padding:8px 11px;font-size:.9rem}.auth-status{font-size:.85rem;color:var(--muted);max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-overlay{position:fixed;inset:0;background:#102a24a8;z-index:1000;display:none;place-items:center;padding:16px}.auth-overlay.open{display:grid}.auth-box{width:min(100%,430px);background:#fff;border-radius:20px;padding:24px;box-shadow:0 20px 70px #0003}.auth-box h2{margin:0 0 6px}.auth-box .field{margin-top:12px}.auth-box .actions button{flex:1}.auth-message{padding:10px;border-radius:10px;background:#f2f7f3;margin-top:12px;font-size:.9rem;overflow-wrap:anywhere}.auth-close{float:right;background:#f2f5f3;color:var(--ink)}.auth-divider{text-align:center;color:var(--muted);margin:10px 0}@media(max-width:600px){.auth-status{display:none}.auth-tools{gap:5px}.auth-tools button{padding:8px;font-size:.82rem}}
+</style>
+<div class="auth-tools" id="authTools"><span class="auth-status" id="authStatus">Not signed in</span><button type="button" id="authOpen" class="primary">Sign in / Create account</button><button type="button" id="authLogout" class="hidden">Log out</button></div>
+<div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+ <section class="auth-box"><button type="button" id="authClose" class="auth-close" aria-label="Close">✕</button><p class="eyebrow">WELCOME TO WANDERWISE</p><h2 id="authTitle">Your travel account</h2><p class="sub">Create an account or sign in to continue.</p>
+ <form id="authForm"><div class="field"><label for="authEmail">Email address</label><input id="authEmail" type="email" autocomplete="email" required maxlength="254"></div><div class="field"><label for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></div><div class="actions"><button type="submit" class="primary" id="authSubmit">Sign in</button><button type="button" id="authSignup">Create account</button></div></form>
+ <div class="auth-divider">or</div><button type="button" id="authGoogle" style="width:100%">Continue with Google</button><div id="authMessage" class="auth-message" role="status" aria-live="polite">Email confirmation may be required for new accounts.</div>
+ </section>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+ const SUPABASE_URL = 'https://hmjtzyakidwtkzhhbgzd.supabase.co';
+ const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_3dsWrDTOtIz6eWi_ndF4Qw_GJIUY8o6';
+ const $ = id => document.getElementById(id);
+ const overlay=$('authOverlay'), message=$('authMessage');
+ let client=null, mode='signin';
+ function say(text){message.textContent=text}
+ function setMode(next){mode=next;$('authTitle').textContent=next==='signup'?'Create your WanderWise account':'Welcome back';$('authSubmit').textContent=next==='signup'?'Create account':'Sign in';$('authPassword').autocomplete=next==='signup'?'new-password':'current-password';say(next==='signup'?'Use an email address you can access. Supabase may send a confirmation email.':'Sign in with your email and password, or choose Google.')}
+ function show(){overlay.classList.add('open');setMode('signin');$('authEmail').focus()}
+ function hide(){overlay.classList.remove('open')}
+ function status(session){const user=session?.user;$('authStatus').textContent=user?(user.email||'Signed in'):'Not signed in';$('authOpen').textContent=user?'Account':'Sign in / Create account';$('authLogout').classList.toggle('hidden',!user);if(user){hide();say('Signed in successfully.')} }
+ async function init(){
+   if(!window.supabase){say('Authentication library did not load. Refresh and try again.');return}
+   client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+   const {data:{session},error}=await client.auth.getSession();if(error)say(error.message);status(session);
+   client.auth.onAuthStateChange((_event,newSession)=>status(newSession));
+ }
+ $('authOpen').addEventListener('click',()=>{if($('authOpen').textContent==='Account'){show()}else show()});
+ $('authClose').addEventListener('click',hide);
+ overlay.addEventListener('click',e=>{if(e.target===overlay)hide()});
+ $('authSignup').addEventListener('click',()=>setMode('signup'));
+ $('authForm').addEventListener('submit',async e=>{e.preventDefault();if(!client){say('Please wait for authentication to initialize, then try again.');return}
+ const email=$('authEmail').value.trim(),password=$('authPassword').value;
+ $('authSubmit').disabled=true;
+ try{
+  if(mode==='signup'){const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});if(error)throw error;say(data.session?'Account created and signed in.':'Account created. Check your email for a confirmation link, then return here to sign in.')}
+  else {const {error}=await client.auth.signInWithPassword({email,password});if(error)throw error;say('Signed in successfully.')}
+ }catch(err){say(err.message||'Authentication failed. Please try again.')}finally{$('authSubmit').disabled=false}
+ });
+ $('authGoogle').addEventListener('click',async()=>{if(!client){say('Please wait for authentication to initialize.');return}try{const {error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}});if(error)throw error}catch(err){say(err.message||'Google sign-in could not start. Check the Google provider settings in Supabase.') }});
+ $('authLogout').addEventListener('click',async()=>{if(!client)return;const {error}=await client.auth.signOut();if(error)say(error.message);else{status(null);say('You have been signed out.')}});
+ init();
+})();
+</script>
+</header><main>
 <section class="hero"><div class="intro"><small style="color:#b8f1d5">TRAVEL MORE THOUGHTFULLY</small><h1>Your next trip, planned around your budget.</h1><p>Build a sample day-wise plan, estimate expenses, and keep your trip details together without paid APIs.</p><button class="primary" onclick="document.querySelector('#tripForm').scrollIntoView({behavior:'smooth'})">Plan a trip ↗</button></div><div class="art"><div class="sun">☀️</div><div>✦ ─ ✈ ─ ✦</div><div>Small budget.<br>Big memories.</div></div></section>
 <nav class="appNav" id="appNav" aria-label="Main navigation"><a href="#dashboard" data-view="dashboard" aria-current="page">⌂ Dashboard</a><a href="#plan" data-view="plan">🧭 Plan Trip</a><a href="#stays-view" data-view="stays-view">🏨 Hotels & Stays</a><a href="#expenses-view" data-view="expenses-view">🧾 Expenses & Payments</a><a href="#saved-view" data-view="saved-view">❤️ Saved Trips</a></nav>
 <section id="dashboard" class="dashHead"><div><p class="eyebrow">YOUR TRAVEL SPACE</p><h2>Plan smarter. Travel happier.</h2><p class="sub">Your trip plans, stay ideas, and spending in one place.</p></div><div class="dashBadge">✦ WanderWise dashboard</div></section>
