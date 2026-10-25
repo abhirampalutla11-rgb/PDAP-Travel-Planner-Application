@@ -42,7 +42,7 @@
  const overlay=$('authOverlay'), message=$('authMessage');
  let client=null, mode='signin'; let syncStarted=false;
  function say(text){message.textContent=text}
- function setMode(next){mode=next;$('authTitle').textContent=next==='signup'?'Create your WanderWise account':'Welcome back';$('authSubmit').textContent=next==='signup'?'Create account':'Sign in';$('authPassword').autocomplete=next==='signup'?'new-password':'current-password';$('authReset').classList.toggle('hidden',next==='signup');say(next==='signup'?'Use an email address you can access. Supabase may send a confirmation email.':'Sign in with your email and password, or choose Google.')}
+ function setMode(next){mode=next;$('authTitle').textContent=next==='signup'?'Create your WanderWise account':next==='recovery'?'Set a new password':'Welcome back';$('authSubmit').textContent=next==='signup'?'Create account':next==='recovery'?'Update password':'Sign in';$('authPassword').autocomplete=next==='signup'||next==='recovery'?'new-password':'current-password';$('authReset').classList.toggle('hidden',next!=='signin');say(next==='signup'?'Use an email address you can access. Supabase may send a confirmation email.':next==='recovery'?'Choose a new password for your account.':'Sign in with your email and password, or choose Google.')}
  function show(){overlay.classList.add('open');setMode('signin');$('authEmail').focus()}
  function hide(){overlay.classList.remove('open')}
  function status(session){const user=session?.user;$('authStatus').textContent=user?(user.email||'Signed in'):'Not signed in';$('authOpen').textContent=user?'Account':'Sign in / Create account';$('authLogout').classList.toggle('hidden',!user);if(user){hide();say('Signed in successfully.')} if(client) window.wwClient=client; window.wwSession=session||null; if(client && typeof window.syncAccountData==='function') void window.syncAccountData(session||null); }
@@ -50,7 +50,7 @@
    if(!window.supabase){say('Authentication library did not load. Refresh and try again.');return}
    client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
    const {data:{session},error}=await client.auth.getSession();if(error)say(error.message);status(session);
-   client.auth.onAuthStateChange((_event,newSession)=>status(newSession));
+   client.auth.onAuthStateChange((event,newSession)=>{status(newSession);if(event==='PASSWORD_RECOVERY'){overlay.classList.add('open');setMode('recovery');say('Choose a new password for your account.')}});
  }
  $('authOpen').addEventListener('click',()=>{if($('authOpen').textContent==='Account'){show()}else show()});
  $('authClose').addEventListener('click',hide);
@@ -61,6 +61,7 @@
  $('authSubmit').disabled=true;
  try{
   if(mode==='signup'){const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});if(error)throw error;say(data.session?'Account created and signed in.':'Account created. Check your email for a confirmation link, then return here to sign in.')}
+  else if(mode==='recovery'){const {error}=await client.auth.updateUser({password});if(error)throw error;setMode('signin');$('authPassword').value='';say('Password updated successfully. You can now sign in with your new password.')}
   else {const {error}=await client.auth.signInWithPassword({email,password});if(error)throw error;say('Signed in successfully.')}
  }catch(err){say(err.message||'Authentication failed. Please try again.')}finally{$('authSubmit').disabled=false}
  });
