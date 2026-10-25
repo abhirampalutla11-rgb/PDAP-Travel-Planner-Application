@@ -305,6 +305,53 @@ input:focus,select:focus{border-color:#5145cd;box-shadow:0 0 0 4px #5145cd1c}
 .statusPending{background:#ffe4eb;color:#a32b50}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 
+
+/* Section-specific destination palettes: consistent structure, distinct mood */
+#view-dashboard{--section-accent:#5145cd;--section-soft:#f0edff;--section-glow:#dcd6ff}
+#view-plan{--section-accent:#087e8b;--section-soft:#e3f8f6;--section-glow:#bdeee8}
+#view-stays-view{--section-accent:#b96a22;--section-soft:#fff0dc;--section-glow:#ffdfb0}
+#view-expenses-view{--section-accent:#23845b;--section-soft:#e4f7ec;--section-glow:#c5eed5}
+#view-saved-view{--section-accent:#c14f77;--section-soft:#fff0f4;--section-glow:#f7cfdd}
+#view-discover-view{--section-accent:#5158b8;--section-soft:#eceeff;--section-glow:#d4d8ff}
+.view-panel{position:relative}
+.view-panel.active:before{content:"";display:block;height:5px;border-radius:0 0 8px 8px;margin:-8px 0 20px;background:linear-gradient(90deg,var(--section-accent),var(--section-glow),#42c6c9,var(--section-accent));background-size:220% 100%;animation:sectionRibbon 12s linear infinite}
+@keyframes sectionRibbon{to{background-position:220% 0}}
+.view-panel .card{border-color:color-mix(in srgb,var(--section-accent) 14%,#fff);box-shadow:0 12px 32px color-mix(in srgb,var(--section-accent) 7%,transparent)}
+.view-panel .card h2{color:var(--ink)}
+.view-panel .eyebrow{color:var(--section-accent)}
+.view-panel input:focus,.view-panel select:focus{border-color:var(--section-accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--section-accent) 14%,transparent)}
+.view-panel .primary{background:linear-gradient(120deg,#ffbd69,#ff956f);color:#38234b}
+#view-dashboard .dashHead{background:linear-gradient(112deg,#e9e5ff 0%,#e5f8f5 56%,#fff0dc 100%);border-color:#dedaf7}
+#view-dashboard .analyticsBlock{background:linear-gradient(145deg,#fff,#f6f4ff);border-color:#e1ddfb}
+#view-plan #budgetPanel{background:linear-gradient(155deg,#fff 0%,#f0fbfa 100%);border-color:#ccece8}
+#view-plan .chips label{background:#f0fbfa;border-color:#ccece8}
+#view-stays-view .stayCard{background:linear-gradient(180deg,#fff 0%,#fffaf3 100%);border-color:#f4dfc5}
+#view-stays-view .stayBody .tag{background:#fff0dc;color:#92541d}
+#view-expenses-view .expenseRow{border-color:#d9eee1}
+#view-expenses-view .expenseMetric{box-shadow:inset 0 3px 0 #7acba0}
+#view-saved-view .saved{border-color:#f2d8e1}
+#view-saved-view .saved strong{color:#a63d65}
+#view-saved-view .empty{background:linear-gradient(135deg,#fff,#fff2f6);border-color:#edc7d5}
+#view-discover-view .discoverIntro{background:radial-gradient(circle at 90% 15%,#ffce8a55,transparent 23%),linear-gradient(125deg,#25235c 0%,#5158b8 55%,#087e8b 100%)}
+#view-discover-view .destinationCard{border-color:color-mix(in srgb,var(--section-accent) 15%,#fff)}
+#view-discover-view .destinationContent .destBreakdown{background:linear-gradient(135deg,#f1f0ff,#effbf8)}
+#view-discover-view .discoverResults .destinationCard:nth-child(6n+1){--card-accent:#5145cd}
+#view-discover-view .discoverResults .destinationCard:nth-child(6n+2){--card-accent:#087e8b}
+#view-discover-view .discoverResults .destinationCard:nth-child(6n+3){--card-accent:#e58b36}
+#view-discover-view .discoverResults .destinationCard:nth-child(6n+4){--card-accent:#c14f77}
+#view-discover-view .discoverResults .destinationCard:nth-child(6n+5){--card-accent:#23845b}
+#view-discover-view .discoverResults .destinationCard:nth-child(6n){--card-accent:#6e69d7}
+#view-discover-view .destinationCard{border-top:4px solid var(--card-accent,#5158b8)}
+#view-discover-view .destinationCard .destCost{color:var(--card-accent,#5158b8)}
+#view-discover-view .destinationCard .destBadge{background:color-mix(in srgb,var(--card-accent,#5158b8) 11%,#fff);color:var(--card-accent,#5158b8)}
+#view-stays-view .stayCard:nth-child(3n+1){--stay-accent:#b96a22}
+#view-stays-view .stayCard:nth-child(3n+2){--stay-accent:#087e8b}
+#view-stays-view .stayCard:nth-child(3n){--stay-accent:#5158b8}
+#view-stays-view .stayCard{border-top:4px solid var(--stay-accent,#b96a22)}
+#view-stays-view .stayBody h3{color:var(--stay-accent,#b96a22)}
+.appNav a[aria-current="page"]{background:linear-gradient(120deg,var(--section-accent,#5145cd),#087e8b);border-color:transparent}
+@media(prefers-reduced-motion:reduce){.view-panel.active:before{animation:none}}
+
 </style>
 </head>
 <body><header class="topbar"><a class="brand" href="#dashboard" aria-label="WanderWise home"><svg class="brandMark" viewBox="0 0 64 64" role="img" aria-label="WanderWise logo"><defs><linearGradient id="wwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#176baf"/><stop offset="1" stop-color="#19b7a5"/></linearGradient></defs><path d="M32 3C17 3 7 14 7 28c0 18 25 33 25 33s25-15 25-33C57 14 47 3 32 3Z" fill="url(#wwg)"/><circle cx="32" cy="27" r="17" fill="#eafafa"/><circle cx="41" cy="18" r="4" fill="#f1a35b"/><path d="M15 31 24 22l7 7 7-9 13 12v8H15Z" fill="#176baf"/><path d="M15 36c8-5 14 4 22 0s10-2 14 0v5H15Z" fill="#19b7a5"/><path d="M3 46c12 7 35 2 47-11" fill="none" stroke="#19b7a5" stroke-width="4" stroke-linecap="round"/><path d="m48 30 8 1-4 7" fill="none" stroke="#19b7a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brandName"><b>Wander</b><strong>Wise</strong><small>Plan Smarter · Travel Better</small></span></a>
