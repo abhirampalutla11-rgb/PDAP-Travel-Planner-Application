@@ -611,6 +611,20 @@ body:not(.dark-mode) .view h1,body:not(.dark-mode) .view h2,body:not(.dark-mode)
 body:not(.dark-mode) .view .sub,body:not(.dark-mode) .view small,body:not(.dark-mode) .view .muted{color:#607782}
 body:not(.dark-mode) .view input,body:not(.dark-mode) .view select,body:not(.dark-mode) .view textarea{background:#fff!important;color:#18313b!important;border-color:#cbdad7!important}
 
+
+/* Correct selectors for the actual .view-panel structure */
+body.dark-mode .view-panel,body.dark-mode .view-panel.active{background:#0b151d!important;color:#e8f2f4!important}
+body.dark-mode .view-panel h1,body.dark-mode .view-panel h2,body.dark-mode .view-panel h3,body.dark-mode .view-panel h4,body.dark-mode .view-panel p,body.dark-mode .view-panel label,body.dark-mode .view-panel li,body.dark-mode .view-panel span,body.dark-mode .view-panel strong,body.dark-mode .view-panel legend,body.dark-mode .view-panel dt,body.dark-mode .view-panel dd{color:#e8f2f4!important}
+body.dark-mode .view-panel .sub,body.dark-mode .view-panel small,body.dark-mode .view-panel .muted,body.dark-mode .view-panel .eyebrow,body.dark-mode .view-panel .hint{color:#b0c3ca!important}
+body.dark-mode .view-panel .card,body.dark-mode .view-panel .quickTool,body.dark-mode .view-panel .toolResult,body.dark-mode .view-panel .tripCard,body.dark-mode .view-panel .saved,body.dark-mode .view-panel .stayCard,body.dark-mode .view-panel .analyticsBlock,body.dark-mode .view-panel .summary>div,body.dark-mode .view-panel .stat,body.dark-mode .view-panel .discoverIntro,body.dark-mode .view-panel .discoverEmpty,body.dark-mode .view-panel .empty,body.dark-mode .view-panel .expenseInsight>div{background:#14232d!important;color:#e8f2f4!important;border-color:#2b414c!important}
+body.dark-mode .view-panel input,body.dark-mode .view-panel select,body.dark-mode .view-panel textarea{background:#0e1c25!important;color:#f4fbfc!important;border-color:#49616c!important}
+body.dark-mode .view-panel input::placeholder,body.dark-mode .view-panel textarea::placeholder{color:#a5bac2!important;opacity:1}
+body.dark-mode .view-panel button:not(.primary){background:#203541!important;color:#f4fbfc!important;border-color:#49616c!important}
+body.dark-mode .view-panel .primary{background:#137a60!important;color:#fff!important}
+body:not(.dark-mode) .view-panel,body:not(.dark-mode) .view-panel.active{background:#f4f8f7!important;color:#18313b!important}
+body:not(.dark-mode) .view-panel h1,body:not(.dark-mode) .view-panel h2,body:not(.dark-mode) .view-panel h3,body:not(.dark-mode) .view-panel h4,body:not(.dark-mode) .view-panel p,body:not(.dark-mode) .view-panel label,body:not(.dark-mode) .view-panel span,body:not(.dark-mode) .view-panel strong{color:#18313b}
+body:not(.dark-mode) .view-panel .sub,body:not(.dark-mode) .view-panel small,body:not(.dark-mode) .view-panel .muted{color:#607782}
+
 </style>
 <div class="auth-tools" id="authTools"><span class="auth-status" id="authStatus">Not signed in</span><button type="button" id="authOpen" class="primary">Sign in / Create account</button><button type="button" id="authLogout" class="hidden">Log out</button>
 <button type="button" id="profileOpen" class="hidden">👤 Edit profile</button>
