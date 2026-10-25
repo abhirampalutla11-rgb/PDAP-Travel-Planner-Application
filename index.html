@@ -242,7 +242,7 @@ function setupWorkspace(){
   results.querySelectorAll('[data-destination-info]').forEach(b=>b.addEventListener('click',()=>{const p=discoverPlaces.find(x=>x.name===b.dataset.destinationInfo);window.open('https://www.google.com/search?q='+encodeURIComponent(p.name+' tourism official travel information'),'_blank','noopener,noreferrer')}));
  }
  $('discoverForm').addEventListener('submit',e=>{e.preventDefault();renderDiscover()});
- ['discBudget','discPeople','discDays','discStyle','discTransport','discStay'].forEach(id=>$(id).addEventListener('change',renderDiscover));
+ ['discStart','discBudget','discPeople','discDays','discStyle','discTransport','discStay'].forEach(id=>$(id).addEventListener('change',renderDiscover));
  renderDiscover();
 
  $('openDiscoverFromDashboard').addEventListener('click',()=>nav.querySelector('[data-view="discover-view"]')?.click());
