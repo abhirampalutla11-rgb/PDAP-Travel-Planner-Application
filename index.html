@@ -503,6 +503,45 @@ input::placeholder{color:#85a8b8}
 .mobileDock{background:#041b28f5!important;border-color:#164655!important}
 @media(max-width:700px){#view-dashboard .intro{min-height:300px}.destinationVisual{height:165px!important}}
 
+
+/* Reference-image alignment: visual-only overrides; preserve all existing app markup and behavior. */
+.topbar{height:68px;padding:8px 3.5%!important;gap:16px!important;background:#041b28!important;border-bottom:1px solid #164655!important}
+.brandMark{width:48px!important;height:48px!important}
+.brandName b,.brandName strong{font-size:1.45rem!important;letter-spacing:-.04em}
+.brandName small{font-size:.62rem!important;letter-spacing:.03em}
+.auth-tools{gap:7px!important}
+.auth-status{color:#eaf5fb!important}
+.auth-tools button{background:#0b2b3b!important;border:1px solid #456477!important;border-radius:10px!important;color:#edf9ff!important}
+.appNav{position:relative!important;top:auto!important;display:flex!important;justify-content:center!important;gap:5px!important;padding:7px 3.5%!important;background:#041b28!important;border-bottom:1px solid #164655!important}
+.appNav a{font-size:.83rem!important;padding:9px 12px!important;border-radius:22px!important;white-space:nowrap}
+.hero{display:block!important;position:relative!important;margin:0!important;padding:0!important;min-height:333px!important;background:linear-gradient(90deg,rgba(2,25,38,.92) 0%,rgba(2,25,38,.56) 44%,rgba(2,25,38,.06) 100%),url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2200&q=90') center 48%/cover!important;border:0!important;border-radius:0!important;overflow:hidden!important}
+.hero .intro{min-height:333px!important;width:100%!important;max-width:none!important;padding:38px 5.3% 28px!important;background:transparent!important;display:block!important;border:0!important;border-radius:0!important;color:#fff!important}
+.hero .intro small{color:#6fe8e0!important;letter-spacing:.13em!important;font-weight:800!important}
+.hero .intro h1{font-size:clamp(2.4rem,4.1vw,3.25rem)!important;line-height:1.06!important;max-width:490px!important;margin:0 0 12px!important;color:#fff!important;letter-spacing:-.04em!important}
+.hero .intro h1 span,.hero .intro h1 strong{color:#00d8c8!important}
+.hero .intro p{font-size:1rem!important;max-width:460px!important;color:#e5f6fc!important}
+.hero .intro button{background:#00bda9!important;border:0!important;border-radius:28px!important;color:white!important}
+.hero .art{display:none!important}
+#dashboard.dashHead,#dashboardAnalytics{display:none!important}
+.stats{display:none!important}
+body{background:#031923!important;color:#eaf5fb!important}
+main{max-width:none!important;padding:0!important}
+#smartTools{margin:0!important;padding:24px 3%!important;background:#031923!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+#smartTools>.eyebrow,#smartTools>h2,#smartTools>p.sub{display:none!important}
+.quickTools{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:18px!important}
+.quickTool{min-width:0!important;padding:16px!important;background:#062431!important;border:1px solid #145061!important;border-radius:12px!important;color:#eaf5fb!important}
+.quickTool .field{display:none!important}
+.quickTool .toolIcon{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:46px!important;height:46px!important;border-radius:12px!important;background:#006e76!important;font-size:1.5rem!important}
+.quickTool h3{display:inline-block!important;vertical-align:middle!important;margin:0 0 0 12px!important;font-size:1rem!important}
+.quickTool p{font-size:.82rem!important;color:#b5d0dc!important;margin:8px 0 12px!important}
+.quickTool button{padding:6px 0!important;border:0!important;background:transparent!important;color:#52e5e0!important}
+.toolResult{color:#b8d8e4!important}
+.destinationVisual{height:180px!important}
+.destinationCard{overflow:hidden!important;border-radius:11px!important}
+.destinationContent{background:#062431!important}
+@media(max-width:950px){.appNav{justify-content:flex-start!important;overflow-x:auto!important}.quickTools{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:600px){.topbar{height:auto!important;flex-wrap:wrap!important}.hero .intro{padding:28px 5%!important;min-height:300px!important}.hero{min-height:300px!important}.quickTools{grid-template-columns:1fr!important}.appNav a{font-size:.75rem!important;padding:8px!important}}
+
 </style>
 <div class="auth-tools" id="authTools"><span class="auth-status" id="authStatus">Not signed in</span><button type="button" id="authOpen" class="primary">Sign in / Create account</button><button type="button" id="authLogout" class="hidden">Log out</button>
 <button type="button" id="profileOpen" class="hidden">👤 Edit profile</button>
