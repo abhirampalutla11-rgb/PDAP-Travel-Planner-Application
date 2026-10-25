@@ -158,6 +158,77 @@ button:not(.primary):not(.danger){background:#e0f5ef;color:#126b63}
 :focus-visible{scroll-margin-top:100px}
 @media(max-width:700px){#view-dashboard .intro:before{right:12%;top:12%}.topbar{min-height:64px}}
 
+
+/* Phase 4 selected upgrades: premium dashboard + one consistent design system */
+:root{
+ --ww-navy:#15364a;--ww-teal:#126b63;--ww-aqua:#20aa98;--ww-mint:#e0f5ef;
+ --ww-cream:#fff0dc;--ww-amber:#ffb36b;--ww-border:#dce8e9;
+ --ww-shadow:0 12px 32px #15364a0c;--ww-radius:22px;
+}
+body{color:var(--ww-navy)}
+.card,.dashHead,.destinationCard,.stayCard,.analyticsBlock{border-color:var(--ww-border)}
+.card,.dashHead{border-radius:var(--ww-radius)}
+/* Dashboard: clearer hierarchy and premium travel-console feel */
+#view-dashboard .dashHead{
+ position:relative;overflow:hidden;isolation:isolate;
+ min-height:172px;padding:30px 32px;
+ background:radial-gradient(circle at 88% 18%,#ffffffb8 0 4%,transparent 4.5%),
+ radial-gradient(circle at 92% 16%,#ffffff70 0 9%,transparent 9.5%),
+ linear-gradient(115deg,#e0f5ed 0%,#f0f8ee 55%,#fff0dc 100%);
+ box-shadow:var(--ww-shadow);
+}
+#view-dashboard .dashHead:after{
+ content:"✈";position:absolute;right:8%;bottom:-38px;font-size:8.5rem;
+ line-height:1;color:#126b6310;transform:rotate(-13deg);z-index:-1;
+}
+#view-dashboard .dashHead .eyebrow{color:var(--ww-teal);margin:0 0 8px}
+#view-dashboard .dashHead h2{font-size:clamp(1.8rem,3.2vw,2.5rem);max-width:680px;color:var(--ww-navy)}
+#view-dashboard .dashHead .sub{font-size:1rem;margin-top:8px}
+#view-dashboard .dashBadge{background:#ffffffd9;border:1px solid #ffffff;box-shadow:0 8px 22px #15364a0d;padding:14px 18px;white-space:nowrap}
+#view-dashboard .stats .stat{display:flex;flex-direction:column;gap:7px;min-height:125px;justify-content:space-between}
+#view-dashboard .stats .stat:nth-child(1):before{content:"🧳";display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#e0f5ef;font-size:1.2rem}
+#view-dashboard .stats .stat:nth-child(2):before{content:"👥";display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#e4effb;font-size:1.2rem}
+#view-dashboard .stats .stat:nth-child(3):before{content:"🎯";display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#fff0dc;font-size:1.2rem}
+#view-dashboard .stats .stat:nth-child(4):before{content:"💳";display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#f2e9fb;font-size:1.2rem}
+#view-dashboard .stats .stat strong{font-size:1.7rem;color:var(--ww-navy)}
+#view-dashboard #dashboardAnalytics>.card{background:linear-gradient(145deg,#fff 0%,#fcfefd 100%);box-shadow:var(--ww-shadow)}
+#view-dashboard .analyticsHead{align-items:center;padding-bottom:16px;border-bottom:1px solid #eaf0ed}
+#view-dashboard .analyticsHead h2{font-size:1.55rem}
+#view-dashboard .analyticsIcon{background:linear-gradient(135deg,#e0f5ef,#fff0dc);box-shadow:inset 0 0 0 1px #ffffff}
+#view-dashboard .analyticsMetric{border:1px solid #e7efeb;background:#f9fcfa;border-radius:15px;padding:16px}
+#view-dashboard .analyticsMetric strong{font-size:clamp(1rem,1.8vw,1.4rem);color:var(--ww-teal)}
+#view-dashboard .analyticsBlock{background:#fff;border-radius:17px;padding:18px}
+#view-dashboard .analyticsBlock h3{font-size:1rem;color:var(--ww-navy)}
+#view-dashboard .chartTrack{height:10px;background:#eaf1ee}
+#view-dashboard .chartFill{background:linear-gradient(90deg,#126b63,#20aa98)}
+#view-dashboard .chartFill.alt{background:linear-gradient(90deg,#f0a45d,#ffd08b)}
+#view-dashboard #openDiscoverFromDashboard{padding:12px 18px}
+#view-dashboard .card .eyebrow{color:var(--ww-teal)}
+/* Shared design tokens applied consistently across all sections */
+button,.priceLink{border-radius:12px;font-weight:800}
+button.primary{background:linear-gradient(135deg,#ffc77f,#ffad62);color:#3d2b1d}
+button.danger{background:#fff0ef;color:#a72b24}
+.appNav a{border-radius:14px}
+.appNav a[aria-current="page"]{background:linear-gradient(135deg,#15364a,#126b63)}
+input,select{border-radius:12px;border-color:#d6e3df}
+input:focus,select:focus{border-color:#20aa98;box-shadow:0 0 0 4px #20aa981b}
+.destBadge,.tag,.paidTag{border-radius:999px}
+.destinationCard,.stayCard{box-shadow:0 10px 28px #15364a0a}
+.destinationCard:hover,.stayCard:hover{box-shadow:0 18px 38px #15364a17}
+#view-discover-view .discoverIntro{border-radius:26px}
+#view-discover-view .destinationContent .destBreakdown{background:linear-gradient(135deg,#f5faf7,#f0f8f5);border:1px solid #e8f0ec}
+#view-stays-view .hotelArt{background-image:linear-gradient(135deg,#e0f5ef55,#fff0dc55)}
+#view-expenses-view .expenseMetric{background:linear-gradient(145deg,#fbfdfc,#f1f8f5)}
+#view-saved-view .saved{padding:16px 4px}
+@media(max-width:700px){
+ #view-dashboard .dashHead{padding:22px;min-height:0}
+ #view-dashboard .dashHead:after{right:2%;font-size:6rem}
+ #view-dashboard .dashBadge{white-space:normal}
+ #view-dashboard .stats .stat{min-height:115px;padding:14px}
+ #view-dashboard .analyticsHead{gap:10px}
+}
+@media(prefers-reduced-motion:reduce){.destinationCard:hover,.stayCard:hover{transform:none}}
+
 </style>
 </head>
 <body><header class="topbar"><a class="brand" href="#dashboard" aria-label="WanderWise home"><svg class="brandMark" viewBox="0 0 64 64" role="img" aria-label="WanderWise logo"><defs><linearGradient id="wwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#176baf"/><stop offset="1" stop-color="#19b7a5"/></linearGradient></defs><path d="M32 3C17 3 7 14 7 28c0 18 25 33 25 33s25-15 25-33C57 14 47 3 32 3Z" fill="url(#wwg)"/><circle cx="32" cy="27" r="17" fill="#eafafa"/><circle cx="41" cy="18" r="4" fill="#f1a35b"/><path d="M15 31 24 22l7 7 7-9 13 12v8H15Z" fill="#176baf"/><path d="M15 36c8-5 14 4 22 0s10-2 14 0v5H15Z" fill="#19b7a5"/><path d="M3 46c12 7 35 2 47-11" fill="none" stroke="#19b7a5" stroke-width="4" stroke-linecap="round"/><path d="m48 30 8 1-4 7" fill="none" stroke="#19b7a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brandName"><b>Wander</b><strong>Wise</strong><small>Plan Smarter · Travel Better</small></span></a>
