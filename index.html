@@ -778,7 +778,7 @@ renderSaved();renderExpenses();renderAnalytics();renderHotelHistory();
  if(!overlay||overlay.dataset.initialized==='true')return;overlay.dataset.initialized='true';
  const key=()=> 'wanderwise-profile:'+(window.wwSession?.user?.id||window.wwSession?.user?.email||'guest');
  function profile(){const meta=window.wwSession?.user?.user_metadata||{};let local={};try{local=JSON.parse(localStorage.getItem(key())||'{}')}catch{}return {name:meta.full_name||meta.name||local.name||'',username:meta.username||local.username||''}}
- function paint(){const p=profile(),user=window.wwSession?.user;const edit=$('profileOpen'),logout=$('authLogout'),status=$('authStatus');edit.classList.toggle('hidden',!user);logout.classList.toggle('hidden',!user);if(user){status.textContent=(p.name||user.email||'Signed in')+(p.username?' · @'+p.username:'');status.title=status.textContent;}}
+ function paint(){const p=profile(),user=window.wwSession?.user;const edit=$('profileOpen'),logout=$('authLogout'),status=$('authStatus');edit.classList.toggle('hidden',!user);logout.classList.toggle('hidden',!user);if(user){const next=(p.name||user.email||'Signed in')+(p.username?' · @'+p.username:'');if(status.textContent!==next)status.textContent=next;status.title=next;}}
  function open(){const p=profile();$('profileName').value=p.name;$('profileUsername').value=p.username;$('profileMessage').textContent='';overlay.classList.add('open');$('profileName').focus()}
  function close(){overlay.classList.remove('open')}
  $('profileOpen').addEventListener('click',open);$('profileClose').addEventListener('click',close);$('profileCancel').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
