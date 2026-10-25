@@ -592,7 +592,43 @@ function setupWorkspace(){
  const requested=location.hash.slice(1);activate(panels[requested]?requested:'dashboard',false);
 }
 setupWorkspace();
-function renderForYou(e){if(e)e.preventDefault();const budget=Number($('fyBudget').value),people=Number($('fyPeople').value),days=Number($('fyDays').value);if(!Number.isFinite(budget)||budget<500||!Number.isInteger(people)||people<1||people>20||!Number.isInteger(days)||days<1||days>30){$('forYouSummary').textContent='Please enter a budget of at least ₹500, 1–20 travellers, and 1–30 days.';$('forYouResults').innerHTML='';return} $('discStart').value=$('fyStart').value;$('discBudget').value=budget;$('discPeople').value=people;$('discDays').value=days;$('discStyle').value=$('fyStyle').value;$('discTransport').value=$('fyTransport').value;$('discStay').value=$('fyStay').value;renderDiscover();const source=$('discoverResults');const cards=[...source.querySelectorAll('.destinationCard')];cards.sort((a,b)=>{const score=el=>{const fit=el.querySelector('.destBadge')?.textContent==='Within budget'?100:0;const vibe=el.querySelector('.destinationContent p')?.textContent.includes($('fyStyle').value)&&$('fyStyle').value!=='Any'?30:0;return fit+vibe};return score(b)-score(a)});$('forYouResults').innerHTML=cards.slice(0,6).map(c=>c.outerHTML).join('')||source.innerHTML;$('forYouSummary').textContent='Showing '+cards.slice(0,6).length+' personalised match(es) for '+people+' traveller(s), '+days+' day(s), and a '+money(budget)+' budget. Matches are prioritised by affordability and your selected travel vibe.';}
+function renderForYou(e){
+ if(e)e.preventDefault();
+ const budget=Number($('fyBudget').value),people=Number($('fyPeople').value),days=Number($('fyDays').value);
+ if(!Number.isFinite(budget)||budget<500||!Number.isInteger(people)||people<1||people>20||!Number.isInteger(days)||days<1||days>30){
+  $('forYouSummary').textContent='Please enter a budget of at least ₹500, 1–20 travellers, and 1–30 days.';
+  $('forYouResults').innerHTML='';return;
+ }
+ $('discStart').value=$('fyStart').value;
+ $('discBudget').value=budget;$('discPeople').value=people;
+ $('discDays').innerHTML=Array.from({length:30},(_,i)=>{const n=i+1;return '<option value="'+n+'">'+n+' day'+(n===1?'':'s')+'</option>'}).join('');
+ $('discDays').value=String(days);$('discStyle').value=$('fyStyle').value;
+ $('discTransport').value=$('fyTransport').value==='shared'?'public':$('fyTransport').value;
+ $('discStay').value=$('fyStay').value;
+ renderDiscover();
+ const source=$('discoverResults');
+ const cards=[...source.querySelectorAll('.destinationCard')];
+ const vibe=$('fyStyle').value;
+ cards.sort((a,b)=>{
+  const score=el=>(el.querySelector('.destBadge')?.textContent==='Within budget'?100:0)+
+   (vibe!=='Any'&&el.querySelector('.destinationContent p')?.textContent.includes(vibe)?30:0);
+  return score(b)-score(a);
+ });
+ const chosen=cards.slice(0,6);
+ $('forYouResults').innerHTML=chosen.map(c=>c.outerHTML).join('')||'<div class="discoverEmpty">No matches found. Try a different travel vibe or increase your budget.</div>';
+ $('forYouSummary').textContent='Showing '+chosen.length+' personalised match(es) for '+people+' traveller(s), '+days+' day(s), and a '+money(budget)+' budget. Matches are prioritised by affordability and your selected travel vibe.';
+ $('forYouResults').querySelectorAll('[data-plan-destination]').forEach(b=>b.addEventListener('click',()=>{
+  const p=discoverPlaces.find(x=>x.name===b.dataset.planDestination);if(!p)return;
+  $('destination').value=p.name;$('people').value=people;$('budget').value=budget;
+  const now=new Date(),today=new Date(now.getTime()-now.getTimezoneOffset()*60000);
+  $('start').value=today.toISOString().slice(0,10);
+  $('end').value=new Date(today.getTime()+((days-1)*86400000)).toISOString().slice(0,10);
+  nav.querySelector('[data-view="plan"]')?.click();
+ }));
+ $('forYouResults').querySelectorAll('[data-destination-info]').forEach(b=>b.addEventListener('click',()=>{
+  window.open('https://www.google.com/search?q='+encodeURIComponent(b.dataset.destinationInfo+' tourism official travel information'),'_blank','noopener,noreferrer');
+ }));
+}
 $('forYouForm').addEventListener('submit',renderForYou);renderForYou();
 renderSaved();renderExpenses();renderAnalytics();renderHotelHistory();
 </script></body></html>
