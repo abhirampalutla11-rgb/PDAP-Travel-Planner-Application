@@ -355,6 +355,53 @@ input:focus,select:focus{border-color:#5145cd;box-shadow:0 0 0 4px #5145cd1c}
 
 /* Personalized For You section */
 .forYouPanel{padding:clamp(18px,3vw,32px)!important}.forYouHero{padding:clamp(22px,4vw,38px);border-radius:20px;background:radial-gradient(circle at 90% 15%,#ffffff40,transparent 25%),linear-gradient(125deg,#15364a,#126b63 70%,#20aa98);color:#fff;margin-bottom:22px}.forYouHero .eyebrow{color:#b9f3df}.forYouHero h1{font-size:clamp(1.9rem,4vw,2.8rem);line-height:1.08;letter-spacing:-.04em;margin:8px 0}.forYouHero p:last-child{max-width:650px;color:#e2f7f1}.forYouForm{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}.forYouForm input,.forYouForm select{min-height:46px}.forYouSubmit{display:flex;align-items:end}.forYouSubmit button{width:100%;min-height:46px}.forYouPanel #forYouResults{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:18px}.forYouPanel .discoverDisclaimer{margin-top:18px}@media(max-width:800px){.forYouForm{grid-template-columns:repeat(2,minmax(0,1fr))}.forYouPanel #forYouResults{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.forYouForm,.forYouPanel #forYouResults{grid-template-columns:1fr}}
+
+/* WanderWise premium polish */
+:root{color-scheme:light;--shadow-soft:0 12px 32px #173f6310;--shadow-card:0 18px 42px #163b3217}
+html{scroll-behavior:smooth}
+body{transition:background .25s ease,color .25s ease}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;position:relative}
+.brand{min-width:0}
+.brandName{flex-wrap:wrap}
+.card,.destinationCard,.stayCard,.analyticsBlock,.dashHead{transition:box-shadow .22s ease,transform .22s ease,border-color .22s ease}
+.card:hover{box-shadow:var(--shadow-soft)}
+button,.priceLink,.appNav a{transition:transform .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease}
+button:hover,.priceLink:hover{transform:translateY(-2px);box-shadow:0 8px 20px #173f6315}
+button:active{transform:translateY(0) scale(.985)}
+.primary{background:linear-gradient(135deg,#ffc984,#ffa95d);color:#352514}
+.intro{background:linear-gradient(115deg,#102c3bdb,#176b55c9),url('assets/wanderwise-hero.jpg') center/cover no-repeat;box-shadow:0 20px 45px #153b3320}
+.intro h1{font-size:clamp(2.35rem,5vw,4.1rem);letter-spacing:-.065em;max-width:720px}
+.intro p{max-width:590px;font-size:1.05rem}
+.art{box-shadow:0 20px 45px #b66f3820}
+.hero>div{border-radius:26px}
+.appNav{scrollbar-width:thin}
+.appNav a[aria-current="page"]{background:linear-gradient(135deg,#176b55,#209c88)}
+.discoverIntro{box-shadow:0 16px 36px #153b3318}
+.destinationVisual{height:180px}
+.destinationContent{padding:20px}
+.destBadge{letter-spacing:.01em}
+.stat,.summary>div,.analyticsMetric{border:1px solid #e6eee9;background:linear-gradient(145deg,#fbfdfb,#f1f7f3)}
+.bar span,.chartFill{background:linear-gradient(90deg,#176b55,#3dbb9c)}
+.footer{padding:24px 16px}
+.themeToggle{flex-shrink:0;border:1px solid var(--line);background:#f5faf7;color:var(--green);border-radius:999px;padding:9px 13px;font-size:.88rem}
+#view-for-you .discoverIntro{background:linear-gradient(120deg,#173b53,#176b55 70%,#249b88)}
+#forYouResults .destinationVisual{height:155px}
+@keyframes wwRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.view-panel.active{animation:wwRise .24s ease both}
+.destinationCard{animation:wwRise .28s ease both}
+body.dark-mode{color-scheme:dark;--ink:#e8f1ee;--muted:#a9bbb6;--bg:#101b20;--line:#2b3d40;--green:#76d5b0;--mint:#203e36;--orange:#ffc078;background:radial-gradient(ellipse at 8% 0%,#17372d 0,transparent 34%),#101b20;color:var(--ink)}
+body.dark-mode .topbar,body.dark-mode .appNav,body.dark-mode .card,body.dark-mode .destinationCard,body.dark-mode .stayCard,body.dark-mode .analyticsBlock,body.dark-mode .navtabs a{background:#17262b;color:var(--ink);border-color:#2c4144}
+body.dark-mode .appNav a{color:#9ce4c8}
+body.dark-mode .appNav a[aria-current="page"]{background:#176b55;color:#fff}
+body.dark-mode input,body.dark-mode select{background:#203237;color:var(--ink);border-color:#40565a}
+body.dark-mode .stat,body.dark-mode .summary>div,body.dark-mode .analyticsMetric,body.dark-mode .expenseMetric{background:#1c2d32;border-color:#304448}
+body.dark-mode .dashHead{background:linear-gradient(120deg,#1a3a33,#382e24)}
+body.dark-mode .themeToggle{background:#24383d;color:#b9f0d9;border-color:#40565a}
+body.dark-mode .empty,body.dark-mode .discoverEmpty{background:#17262b;border-color:#40565a;color:var(--muted)}
+body.dark-mode .priceLink{background:#203e36;color:#a5e8cb}
+@media(max-width:600px){.topbar{align-items:flex-start}.themeToggle{padding:8px 10px}.intro h1{font-size:clamp(2.2rem,10vw,3.1rem)}.destinationVisual{height:155px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
 </style>
 </head>
 <body><header class="topbar"><a class="brand" href="#dashboard" aria-label="WanderWise home"><svg class="brandMark" viewBox="0 0 64 64" role="img" aria-label="WanderWise logo"><defs><linearGradient id="wwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#176baf"/><stop offset="1" stop-color="#19b7a5"/></linearGradient></defs><path d="M32 3C17 3 7 14 7 28c0 18 25 33 25 33s25-15 25-33C57 14 47 3 32 3Z" fill="url(#wwg)"/><circle cx="32" cy="27" r="17" fill="#eafafa"/><circle cx="41" cy="18" r="4" fill="#f1a35b"/><path d="M15 31 24 22l7 7 7-9 13 12v8H15Z" fill="#176baf"/><path d="M15 36c8-5 14 4 22 0s10-2 14 0v5H15Z" fill="#19b7a5"/><path d="M3 46c12 7 35 2 47-11" fill="none" stroke="#19b7a5" stroke-width="4" stroke-linecap="round"/><path d="m48 30 8 1-4 7" fill="none" stroke="#19b7a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brandName"><b>Wander</b><strong>Wise</strong><small>Plan Smarter · Travel Better</small></span></a>
@@ -634,4 +681,18 @@ function renderForYou(e){
 }
 $('forYouForm').addEventListener('submit',renderForYou);renderForYou();
 renderSaved();renderExpenses();renderAnalytics();renderHotelHistory();
+
+/* Accessible theme toggle with preference persistence */
+(function(){
+ const topbar=document.querySelector('.topbar');
+ if(!topbar||document.querySelector('.themeToggle'))return;
+ const button=document.createElement('button');
+ button.type='button';button.className='themeToggle';button.setAttribute('aria-label','Toggle dark mode');
+ const saved=localStorage.getItem('wanderwise-theme');
+ if(saved==='dark')document.body.classList.add('dark-mode');
+ const paint=()=>{const dark=document.body.classList.contains('dark-mode');button.textContent=dark?'☀️ Light mode':'🌙 Dark mode';button.setAttribute('aria-pressed',String(dark));};
+ button.addEventListener('click',()=>{document.body.classList.toggle('dark-mode');localStorage.setItem('wanderwise-theme',document.body.classList.contains('dark-mode')?'dark':'light');paint();});
+ topbar.appendChild(button);paint();
+})();
+
 </script></body></html>
