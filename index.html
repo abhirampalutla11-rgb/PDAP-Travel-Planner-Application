@@ -158,6 +158,9 @@ function setupWorkspace(){
  const workspace=document.createElement('div');workspace.className='workspace';workspace.id='workspace';
  const panels={};
  [['dashboard','Dashboard'],['plan','Plan Trip'],['stays-view','Hotels & Stays'],['expenses-view','Expenses & Payments'],['saved-view','Saved Trips'],['discover-view','Discover Places']].forEach(([id,title])=>{const p=document.createElement('section');p.className='view-panel'+(id==='dashboard'?' active':'');p.id='view-'+id;p.setAttribute('aria-label',title);panels[id]=p;workspace.appendChild(p)});
+ const nav=main.querySelector('#appNav');
+ if(!nav){console.error('WanderWise: navigation was not found.');return}
+ nav.after(workspace);
  hero.remove();dash.remove();stats.remove();analytics.remove();left.remove();stayCard.remove();expenseCard.remove();budgetCard.remove();savedCard.remove();
  panels.dashboard.append(hero,dash,stats,analytics);
  const discoverPreview=document.createElement('section');discoverPreview.className='card';discoverPreview.innerHTML='<p class="eyebrow">SMART TRAVEL PICKS</p><h2>Discover places within your budget</h2><p class="sub">Explore destinations across India, compare estimated trip costs, and find an option that suits your plans.</p><div class="actions"><button type="button" class="primary" id="openDiscoverFromDashboard">Explore destinations ✨</button></div>';panels.dashboard.append(discoverPreview);
@@ -217,8 +220,7 @@ function setupWorkspace(){
  ['discBudget','discPeople','discDays','discStyle','discTransport','discStay'].forEach(id=>$(id).addEventListener('change',renderDiscover));
  renderDiscover();
 
- const nav=main.querySelector('#appNav');nav.after(workspace);
- $('openDiscoverFromDashboard').addEventListener('click',()=>nav.querySelector('[data-view="discover-view"]').click());
+ $('openDiscoverFromDashboard').addEventListener('click',()=>nav.querySelector('[data-view="discover-view"]')?.click());
  function activate(id,updateHash=true){if(!panels[id])id='dashboard';Object.entries(panels).forEach(([key,p])=>p.classList.toggle('active',key===id));nav.querySelectorAll('[data-view]').forEach(a=>{if(a.dataset.view===id)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});if(updateHash)history.replaceState(null,'','#'+id);window.scrollTo({top:0,behavior:'auto'});}
  nav.querySelectorAll('[data-view]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();activate(a.dataset.view)}));
  window.addEventListener('hashchange',()=>activate(location.hash.slice(1),false));
