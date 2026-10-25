@@ -558,6 +558,8 @@ function setupWorkspace(){
 
  const originCities={'guntur':[16.3067,80.4365],'vijayawada':[16.5062,80.6480],'amaravati':[16.5745,80.3575],'hyderabad':[17.3850,78.4867],'visakhapatnam':[17.6868,83.2185],'vizag':[17.6868,83.2185],'chennai':[13.0827,80.2707],'bengaluru':[12.9716,77.5946],'bangalore':[12.9716,77.5946],'mumbai':[19.0760,72.8777],'pune':[18.5204,73.8567],'delhi':[28.6139,77.2090],'new delhi':[28.6139,77.2090],'kolkata':[22.5726,88.3639],'kochi':[9.9312,76.2673],'thiruvananthapuram':[8.5241,76.9366],'jaipur':[26.9124,75.7873],'lucknow':[26.8467,80.9462],'ahmedabad':[23.0225,72.5714],'patna':[25.5941,85.1376],'bhubaneswar':[20.2961,85.8245],'ranchi':[23.3441,85.3096],'guwahati':[26.1445,91.7362],'chandigarh':[30.7333,76.7794],'srinagar':[34.0837,74.7973],'dehradun':[30.3165,78.0322],'coimbatore':[11.0168,76.9558],'madurai':[9.9252,78.1198],'tirupati':[13.6288,79.4192]};
  function discoverDistanceKm(a,b){const rad=x=>x*Math.PI/180,lat1=rad(a[0]),lat2=rad(b[0]),dLat=rad(b[0]-a[0]),dLon=rad(b[1]-a[1]);const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;return 6371*2*Math.asin(Math.sqrt(Math.min(1,h)))}
+ window.wanderWiseDiscoverPlaces=discoverPlaces;
+ window.wanderWiseAppNav=nav;
  function discoverEstimate(place,people,days,transport,stay){
   const originText=$('discStart').value.trim().toLowerCase(),origin=originCities[originText]||[16.3067,80.4365],distance=discoverDistanceKm(origin,[place.lat,place.lon]);
   const perPersonRate=transport==='own'?2.6:transport==='flex'?2.2:1.6;
@@ -570,6 +572,7 @@ function setupWorkspace(){
   const total=travel+lodging+food+activities;
   return {travel,lodging,food,activities,total};
  }
+ window.wanderWiseRenderDiscover=renderDiscover;
  function renderDiscover(){
   const budget=Number($('discBudget').value),people=Number($('discPeople').value),days=Number($('discDays').value),style=$('discStyle').value,transport=$('discTransport').value,stay=$('discStay').value;
   const results=$('discoverResults');$('discoverHeading').textContent='Destinations for '+money(budget)+' · '+days+' day'+(days===1?'':'s');
@@ -605,7 +608,7 @@ function renderForYou(e){
  $('discDays').value=String(days);$('discStyle').value=$('fyStyle').value;
  $('discTransport').value=$('fyTransport').value==='shared'?'public':$('fyTransport').value;
  $('discStay').value=$('fyStay').value;
- renderDiscover();
+ window.wanderWiseRenderDiscover();
  const source=$('discoverResults');
  const cards=[...source.querySelectorAll('.destinationCard')];
  const vibe=$('fyStyle').value;
@@ -618,12 +621,12 @@ function renderForYou(e){
  $('forYouResults').innerHTML=chosen.map(c=>c.outerHTML).join('')||'<div class="discoverEmpty">No matches found. Try a different travel vibe or increase your budget.</div>';
  $('forYouSummary').textContent='Showing '+chosen.length+' personalised match(es) for '+people+' traveller(s), '+days+' day(s), and a '+money(budget)+' budget. Matches are prioritised by affordability and your selected travel vibe.';
  $('forYouResults').querySelectorAll('[data-plan-destination]').forEach(b=>b.addEventListener('click',()=>{
-  const p=discoverPlaces.find(x=>x.name===b.dataset.planDestination);if(!p)return;
+  const p=window.wanderWiseDiscoverPlaces?.find(x=>x.name===b.dataset.planDestination);if(!p)return;
   $('destination').value=p.name;$('people').value=people;$('budget').value=budget;
   const now=new Date(),today=new Date(now.getTime()-now.getTimezoneOffset()*60000);
   $('start').value=today.toISOString().slice(0,10);
   $('end').value=new Date(today.getTime()+((days-1)*86400000)).toISOString().slice(0,10);
-  nav.querySelector('[data-view="plan"]')?.click();
+  window.wanderWiseAppNav?.querySelector('[data-view="plan"]')?.click();
  }));
  $('forYouResults').querySelectorAll('[data-destination-info]').forEach(b=>b.addEventListener('click',()=>{
   window.open('https://www.google.com/search?q='+encodeURIComponent(b.dataset.destinationInfo+' tourism official travel information'),'_blank','noopener,noreferrer');
