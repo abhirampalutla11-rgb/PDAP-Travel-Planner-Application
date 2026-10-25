@@ -543,88 +543,42 @@ main{max-width:none!important;padding:0!important}
 @media(max-width:600px){.topbar{height:auto!important;flex-wrap:wrap!important}.hero .intro{padding:28px 5%!important;min-height:300px!important}.hero{min-height:300px!important}.quickTools{grid-template-columns:1fr!important}.appNav a{font-size:.75rem!important;padding:8px!important}}
 
 
-/* Reliable, visibly distinct light and dark themes across the entire workspace */
+/* Unified theme rules. Keep component layout/styles above; only override theme colours here. */
 :root{color-scheme:light;--bg:#f4f8f7;--ink:#18313b;--muted:#607782;--line:#dce7e5;--green:#126b58;--mint:#e1f4eb}
-html,body{background:#f4f8f7!important;color:#18313b!important;transition:background-color .2s ease,color .2s ease}
-body:not(.dark-mode) .workspace,body:not(.dark-mode) main,body:not(.dark-mode) .panel,body:not(.dark-mode) .view{background-color:#f4f8f7;color:#18313b}
-body:not(.dark-mode) .card,body:not(.dark-mode) .destinationCard,body:not(.dark-mode) .stayCard,body:not(.dark-mode) .tripCard,body:not(.dark-mode) .saved,body:not(.dark-mode) .analyticsBlock,body:not(.dark-mode) .quickTool,body:not(.dark-mode) .toolResult,body:not(.dark-mode) .expenseInsight>div{background:#fff!important;color:#18313b!important;border-color:#dce7e5!important;box-shadow:0 8px 26px rgba(24,49,59,.06)}
-body:not(.dark-mode) input,body:not(.dark-mode) select,body:not(.dark-mode) textarea{background:#fff!important;color:#18313b!important;border-color:#cbdad7!important}
-body:not(.dark-mode) .topbar,body:not(.dark-mode) .appNav{background:rgba(255,255,255,.97)!important;color:#18313b!important;border-color:#dce7e5!important}
+html,body{min-height:100%;background:#f4f8f7;color:#18313b;transition:background-color .18s ease,color .18s ease}
+body:not(.dark-mode){color-scheme:light}
+body:not(.dark-mode) .workspace,body:not(.dark-mode) main,body:not(.dark-mode) #workspace,body:not(.dark-mode) .views,body:not(.dark-mode) .view-panel{background-color:#f4f8f7;color:#18313b}
+body:not(.dark-mode) .topbar,body:not(.dark-mode) .appNav{background:rgba(255,255,255,.97);color:#18313b;border-color:#dce7e5}
 body:not(.dark-mode) .appNav a{color:#36545d}
-body:not(.dark-mode) .sub,body:not(.dark-mode) small,body:not(.dark-mode) .quickTool p{color:#607782}
-body.dark-mode{color-scheme:dark;--bg:#0b151d;--ink:#e8f2f4;--muted:#a5bac2;--line:#2a3e49;--green:#32c49a;--mint:#163a34;background:#0b151d!important;color:#e8f2f4!important}
-html:has(body.dark-mode){background:#0b151d!important;color-scheme:dark}
-body.dark-mode .workspace,body.dark-mode main,body.dark-mode .panel,body.dark-mode .view,body.dark-mode .content,body.dark-mode .page{background-color:#0b151d!important;color:#e8f2f4!important}
-body.dark-mode .card,body.dark-mode .destinationCard,body.dark-mode .stayCard,body.dark-mode .tripCard,body.dark-mode .saved,body.dark-mode .analyticsBlock,body.dark-mode .quickTool,body.dark-mode .toolResult,body.dark-mode .expenseInsight>div,body.dark-mode .stat,body.dark-mode .summary>div,body.dark-mode .analyticsMetric,body.dark-mode .expenseMetric,body.dark-mode .stayBody{background:#14232d!important;color:#e8f2f4!important;border-color:#2b414c!important;box-shadow:0 10px 30px rgba(0,0,0,.18)}
-body.dark-mode .topbar,body.dark-mode .appNav{background:rgba(12,25,34,.98)!important;color:#e8f2f4!important;border-color:#2b414c!important}
-body.dark-mode .appNav a{color:#b4d9d6!important}
-body.dark-mode .appNav a[aria-current="page"]{background:#155744!important;color:#fff!important}
-body.dark-mode h1,body.dark-mode h2,body.dark-mode h3,body.dark-mode h4,body.dark-mode p,body.dark-mode label,body.dark-mode li,body.dark-mode strong,body.dark-mode .brandName{color:#e8f2f4}
-body.dark-mode .sub,body.dark-mode small,body.dark-mode .quickTool p,body.dark-mode .muted{color:#a5bac2!important}
-body.dark-mode input,body.dark-mode select,body.dark-mode textarea{background:#0e1c25!important;color:#e8f2f4!important;border-color:#3a515d!important}
-body.dark-mode input::placeholder,body.dark-mode textarea::placeholder{color:#8ba2ad!important}
-body.dark-mode button:not(.primary),body.dark-mode .themeToggle{background:#203541!important;color:#e8f2f4!important;border-color:#3a515d!important}
-body.dark-mode button.primary,body.dark-mode .primary{background:linear-gradient(135deg,#137a60,#20a780)!important;color:#fff!important;border-color:transparent!important}
-body.dark-mode .dashHead{background:linear-gradient(120deg,#123c35,#202d3a)!important;color:#e8f2f4!important}
-body.dark-mode .empty,body.dark-mode .discoverEmpty,body.dark-mode .auth-message{background:#14232d!important;color:#dce9ed!important;border-color:#2b414c!important}
-body.dark-mode .chips label,body.dark-mode .tag,body.dark-mode .mapLinks a,body.dark-mode .priceLink{background:#173d35!important;color:#b8f1dc!important;border-color:#31574e!important}
-body.dark-mode .mobileDock{background:rgba(12,25,34,.98)!important;border-color:#2b414c!important}
-body.dark-mode .mobileDock button{background:transparent!important;color:#b4d9d6!important}
-body.dark-mode .bar{background:#263c47!important}
-body.dark-mode .notice{background:#3b3223!important;color:#ffdda3!important;border-color:#65512d!important}
-
-
-/* Final theme coverage for every app view and nested surface */
-body.dark-mode .workspace *,body.dark-mode #workspace *,body.dark-mode .view.active,body.dark-mode .view.active>section,body.dark-mode .view.active>.card,body.dark-mode .view.active .section,body.dark-mode .view.active .formCard{border-color:#2b414c}
-body.dark-mode .workspace,body.dark-mode #workspace,body.dark-mode .views,body.dark-mode .view,body.dark-mode .view.active,body.dark-mode .view>section:not(.hero),body.dark-mode .view>div:not(.hero):not(.destinationVisual),body.dark-mode .form-grid,body.dark-mode .plan-layout,body.dark-mode .dashboard-grid{background-color:#0b151d!important;color:#e8f2f4!important}
-body.dark-mode .view .card,body.dark-mode .view form,body.dark-mode .view fieldset,body.dark-mode .view .panel,body.dark-mode .view .form-section,body.dark-mode .view .result,body.dark-mode .view .resultCard,body.dark-mode .view .tripCard,body.dark-mode .view .saved,body.dark-mode .view .stayCard,body.dark-mode .view .expenseCard,body.dark-mode .view .analyticsBlock,body.dark-mode .view .discoverIntro,body.dark-mode .view .discoverEmpty,body.dark-mode .view .empty,body.dark-mode .view .summary,body.dark-mode .view .summary>div,body.dark-mode .view .metric,body.dark-mode .view .stat,body.dark-mode .view .notice,body.dark-mode .view .toolResult{background-color:#14232d!important;color:#e8f2f4!important;border-color:#2b414c!important}
-body.dark-mode .view h1,body.dark-mode .view h2,body.dark-mode .view h3,body.dark-mode .view h4,body.dark-mode .view p,body.dark-mode .view label,body.dark-mode .view li,body.dark-mode .view dt,body.dark-mode .view dd,body.dark-mode .view span:not(.visualEmoji):not(.visualLabel),body.dark-mode .view legend,body.dark-mode .view .eyebrow,body.dark-mode .view .sub,body.dark-mode .view .muted{color:#e0edf0!important}
-body.dark-mode .view .sub,body.dark-mode .view .muted,body.dark-mode .view small,body.dark-mode .view .hint,body.dark-mode .view .help-text{color:#a5bac2!important}
-body.dark-mode .view input,body.dark-mode .view select,body.dark-mode .view textarea,body.dark-mode .view option{background:#0e1c25!important;color:#e8f2f4!important;border-color:#3a515d!important}
-body.dark-mode .view input[type="checkbox"],body.dark-mode .view input[type="radio"]{accent-color:#32c49a}
-body.dark-mode .view table,body.dark-mode .view thead,body.dark-mode .view tbody,body.dark-mode .view tr,body.dark-mode .view td,body.dark-mode .view th{background-color:#14232d!important;color:#e8f2f4!important;border-color:#2b414c!important}
-body.dark-mode .view a:not(.primary),body.dark-mode .view .textLink{color:#82d9c0!important}
-body.dark-mode .view .destinationVisual,body.dark-mode .view .hero,body.dark-mode .view .art{color:#fff!important}
-body:not(.dark-mode) .workspace,body:not(.dark-mode) #workspace,body:not(.dark-mode) .views,body:not(.dark-mode) .view,body:not(.dark-mode) .view.active,body:not(.dark-mode) .view>section:not(.hero),body:not(.dark-mode) .view>div:not(.hero):not(.destinationVisual){background-color:#f4f8f7!important;color:#18313b!important}
-body:not(.dark-mode) .view .card,body:not(.dark-mode) .view form,body:not(.dark-mode) .view fieldset,body:not(.dark-mode) .view .panel,body:not(.dark-mode) .view .form-section,body:not(.dark-mode) .view .result,body:not(.dark-mode) .view .resultCard,body:not(.dark-mode) .view .expenseCard,body:not(.dark-mode) .view .discoverIntro,body:not(.dark-mode) .view .summary>div,body:not(.dark-mode) .view .metric{background-color:#fff!important;color:#18313b!important;border-color:#dce7e5!important}
-
-
-/* Theme visibility hotfix: preserve readable foreground colours and contrast */
-body.dark-mode,body.dark-mode *{text-shadow:none}
-body.dark-mode{background:#0b151d!important;color:#e8f2f4!important}
-body.dark-mode .workspace *,body.dark-mode .view *,body.dark-mode .panel *,body.dark-mode .card *{color:inherit}
-body.dark-mode .view,body.dark-mode .view.active{background:#0b151d!important;color:#e8f2f4!important}
-body.dark-mode .view .card,body.dark-mode .view .destinationCard,body.dark-mode .view .stayCard,body.dark-mode .view .tripCard,body.dark-mode .view .saved,body.dark-mode .view .analyticsBlock,body.dark-mode .view .quickTool,body.dark-mode .view .toolResult,body.dark-mode .view .discoverIntro,body.dark-mode .view .discoverEmpty,body.dark-mode .view .empty,body.dark-mode .view .summary>div,body.dark-mode .view .stat,body.dark-mode .view .expenseMetric,body.dark-mode .view .analyticsMetric{background:#14232d!important;color:#e8f2f4!important;border-color:#2b414c!important}
-body.dark-mode .view h1,body.dark-mode .view h2,body.dark-mode .view h3,body.dark-mode .view h4,body.dark-mode .view p,body.dark-mode .view label,body.dark-mode .view li,body.dark-mode .view strong,body.dark-mode .view span,body.dark-mode .view div,body.dark-mode .view legend{color:#e8f2f4}
-body.dark-mode .view .sub,body.dark-mode .view small,body.dark-mode .view .muted,body.dark-mode .view .hint{color:#a5bac2!important}
-body.dark-mode .view input,body.dark-mode .view select,body.dark-mode .view textarea{background:#0e1c25!important;color:#f4fbfc!important;border:1px solid #49616c!important}
-body.dark-mode .view input::placeholder,body.dark-mode .view textarea::placeholder{color:#a5bac2!important;opacity:1}
-body.dark-mode .view a:not(.primary){color:#82d9c0!important}
-body.dark-mode .view button:not(.primary){background:#203541!important;color:#f4fbfc!important;border-color:#49616c!important}
-body.dark-mode .view button.primary,body.dark-mode .view .primary{background:#137a60!important;color:#fff!important}
-body.dark-mode .topbar,body.dark-mode .appNav,body.dark-mode .mobileDock{background:#0c1922!important;color:#e8f2f4!important;border-color:#2b414c!important}
-body.dark-mode .brandName,body.dark-mode .brandName *,body.dark-mode .authStatus,body.dark-mode #authStatus{color:#e8f2f4!important}
-body:not(.dark-mode){background:#f4f8f7!important;color:#18313b!important}
-body:not(.dark-mode) .view,body:not(.dark-mode) .view.active{background:#f4f8f7!important;color:#18313b!important}
-body:not(.dark-mode) .view .card,body:not(.dark-mode) .view .destinationCard,body:not(.dark-mode) .view .stayCard,body:not(.dark-mode) .view .tripCard,body:not(.dark-mode) .view .saved,body:not(.dark-mode) .view .analyticsBlock,body:not(.dark-mode) .view .quickTool,body:not(.dark-mode) .view .toolResult,body:not(.dark-mode) .view .discoverIntro,body:not(.dark-mode) .view .summary>div,body:not(.dark-mode) .view .stat{background:#fff!important;color:#18313b!important;border-color:#dce7e5!important}
-body:not(.dark-mode) .view h1,body:not(.dark-mode) .view h2,body:not(.dark-mode) .view h3,body:not(.dark-mode) .view h4,body:not(.dark-mode) .view p,body:not(.dark-mode) .view label,body:not(.dark-mode) .view li,body:not(.dark-mode) .view strong{color:#18313b}
-body:not(.dark-mode) .view .sub,body:not(.dark-mode) .view small,body:not(.dark-mode) .view .muted{color:#607782}
-body:not(.dark-mode) .view input,body:not(.dark-mode) .view select,body:not(.dark-mode) .view textarea{background:#fff!important;color:#18313b!important;border-color:#cbdad7!important}
-
-
-/* Correct selectors for the actual .view-panel structure */
-body.dark-mode .view-panel,body.dark-mode .view-panel.active{background:#0b151d!important;color:#e8f2f4!important}
-body.dark-mode .view-panel h1,body.dark-mode .view-panel h2,body.dark-mode .view-panel h3,body.dark-mode .view-panel h4,body.dark-mode .view-panel p,body.dark-mode .view-panel label,body.dark-mode .view-panel li,body.dark-mode .view-panel span,body.dark-mode .view-panel strong,body.dark-mode .view-panel legend,body.dark-mode .view-panel dt,body.dark-mode .view-panel dd{color:#e8f2f4!important}
-body.dark-mode .view-panel .sub,body.dark-mode .view-panel small,body.dark-mode .view-panel .muted,body.dark-mode .view-panel .eyebrow,body.dark-mode .view-panel .hint{color:#b0c3ca!important}
-body.dark-mode .view-panel .card,body.dark-mode .view-panel .quickTool,body.dark-mode .view-panel .toolResult,body.dark-mode .view-panel .tripCard,body.dark-mode .view-panel .saved,body.dark-mode .view-panel .stayCard,body.dark-mode .view-panel .analyticsBlock,body.dark-mode .view-panel .summary>div,body.dark-mode .view-panel .stat,body.dark-mode .view-panel .discoverIntro,body.dark-mode .view-panel .discoverEmpty,body.dark-mode .view-panel .empty,body.dark-mode .view-panel .expenseInsight>div{background:#14232d!important;color:#e8f2f4!important;border-color:#2b414c!important}
-body.dark-mode .view-panel input,body.dark-mode .view-panel select,body.dark-mode .view-panel textarea{background:#0e1c25!important;color:#f4fbfc!important;border-color:#49616c!important}
-body.dark-mode .view-panel input::placeholder,body.dark-mode .view-panel textarea::placeholder{color:#a5bac2!important;opacity:1}
-body.dark-mode .view-panel button:not(.primary){background:#203541!important;color:#f4fbfc!important;border-color:#49616c!important}
-body.dark-mode .view-panel .primary{background:#137a60!important;color:#fff!important}
-body:not(.dark-mode) .view-panel,body:not(.dark-mode) .view-panel.active{background:#f4f8f7!important;color:#18313b!important}
-body:not(.dark-mode) .view-panel h1,body:not(.dark-mode) .view-panel h2,body:not(.dark-mode) .view-panel h3,body:not(.dark-mode) .view-panel h4,body:not(.dark-mode) .view-panel p,body:not(.dark-mode) .view-panel label,body:not(.dark-mode) .view-panel span,body:not(.dark-mode) .view-panel strong{color:#18313b}
-body:not(.dark-mode) .view-panel .sub,body:not(.dark-mode) .view-panel small,body:not(.dark-mode) .view-panel .muted{color:#607782}
-
+body:not(.dark-mode) .card,body:not(.dark-mode) .destinationCard,body:not(.dark-mode) .stayCard,body:not(.dark-mode) .tripCard,body:not(.dark-mode) .saved,body:not(.dark-mode) .analyticsBlock,body:not(.dark-mode) .quickTool,body:not(.dark-mode) .toolResult,body:not(.dark-mode) .expenseInsight>div,body:not(.dark-mode) .view-panel .card,body:not(.dark-mode) .view-panel .discoverIntro,body:not(.dark-mode) .view-panel .discoverEmpty,body:not(.dark-mode) .view-panel .summary>div,body:not(.dark-mode) .view-panel .stat{background:#fff;color:#18313b;border-color:#dce7e5}
+body:not(.dark-mode) h1,body:not(.dark-mode) h2,body:not(.dark-mode) h3,body:not(.dark-mode) h4,body:not(.dark-mode) p,body:not(.dark-mode) label,body:not(.dark-mode) li,body:not(.dark-mode) strong,body:not(.dark-mode) .view-panel span{color:#18313b}
+body:not(.dark-mode) .sub,body:not(.dark-mode) small,body:not(.dark-mode) .muted,body:not(.dark-mode) .hint,body:not(.dark-mode) .quickTool p{color:#607782}
+body:not(.dark-mode) input,body:not(.dark-mode) select,body:not(.dark-mode) textarea{background:#fff;color:#18313b;border-color:#cbdad7}
+body:not(.dark-mode) .mobileDock{background:rgba(255,255,255,.96);border-color:#dce7e5}
+body.dark-mode{color-scheme:dark;--bg:#0b151d;--ink:#e8f2f4;--muted:#a5bac2;--line:#2a3e49;--green:#32c49a;--mint:#163a34;background:#0b151d;color:#e8f2f4}
+html:has(body.dark-mode){background:#0b151d;color-scheme:dark}
+body.dark-mode .workspace,body.dark-mode main,body.dark-mode #workspace,body.dark-mode .views,body.dark-mode .view-panel{background-color:#0b151d;color:#e8f2f4}
+body.dark-mode .topbar,body.dark-mode .appNav,body.dark-mode .mobileDock{background:rgba(12,25,34,.98);color:#e8f2f4;border-color:#2b414c}
+body.dark-mode .appNav a{color:#b4d9d6}
+body.dark-mode .appNav a[aria-current="page"]{background:#155744;color:#fff}
+body.dark-mode .card,body.dark-mode .destinationCard,body.dark-mode .stayCard,body.dark-mode .tripCard,body.dark-mode .saved,body.dark-mode .analyticsBlock,body.dark-mode .quickTool,body.dark-mode .toolResult,body.dark-mode .expenseInsight>div,body.dark-mode .stat,body.dark-mode .summary>div,body.dark-mode .analyticsMetric,body.dark-mode .expenseMetric,body.dark-mode .stayBody,body.dark-mode .view-panel form,body.dark-mode .view-panel fieldset,body.dark-mode .view-panel .panel,body.dark-mode .view-panel .form-section,body.dark-mode .view-panel .result,body.dark-mode .view-panel .resultCard,body.dark-mode .view-panel .discoverIntro,body.dark-mode .view-panel .discoverEmpty,body.dark-mode .view-panel .empty{background:#14232d;color:#e8f2f4;border-color:#2b414c}
+body.dark-mode h1,body.dark-mode h2,body.dark-mode h3,body.dark-mode h4,body.dark-mode p,body.dark-mode label,body.dark-mode li,body.dark-mode strong,body.dark-mode legend,body.dark-mode dt,body.dark-mode dd,body.dark-mode .brandName,body.dark-mode .view-panel span{color:#e8f2f4}
+body.dark-mode .sub,body.dark-mode small,body.dark-mode .muted,body.dark-mode .hint,body.dark-mode .help-text,body.dark-mode .quickTool p{color:#a5bac2}
+body.dark-mode input,body.dark-mode select,body.dark-mode textarea,body.dark-mode option{background:#0e1c25;color:#f4fbfc;border-color:#49616c}
+body.dark-mode input::placeholder,body.dark-mode textarea::placeholder{color:#a5bac2;opacity:1}
+body.dark-mode button:not(.primary),body.dark-mode .themeToggle{background:#203541;color:#e8f2f4;border-color:#3a515d}
+body.dark-mode button.primary,body.dark-mode .primary{background:linear-gradient(135deg,#137a60,#20a780);color:#fff;border-color:transparent}
+body.dark-mode .dashHead{background:linear-gradient(120deg,#123c35,#202d3a);color:#e8f2f4}
+body.dark-mode .empty,body.dark-mode .discoverEmpty,body.dark-mode .auth-message{background:#14232d;color:#dce9ed;border-color:#2b414c}
+body.dark-mode .chips label,body.dark-mode .tag,body.dark-mode .mapLinks a,body.dark-mode .priceLink{background:#173d35;color:#b8f1dc;border-color:#31574e}
+body.dark-mode .mobileDock button{background:transparent;color:#b4d9d6}
+body.dark-mode .bar{background:#263c47}
+body.dark-mode .notice{background:#3b3223;color:#ffdda3;border-color:#65512d}
+body.dark-mode .view-panel a:not(.primary),body.dark-mode a.textLink{color:#82d9c0}
+body.dark-mode .view-panel .destinationVisual,body.dark-mode .view-panel .hero,body.dark-mode .view-panel .art{color:#fff}
+body.dark-mode .view-panel table,body.dark-mode .view-panel thead,body.dark-mode .view-panel tbody,body.dark-mode .view-panel tr,body.dark-mode .view-panel td,body.dark-mode .view-panel th{background-color:#14232d;color:#e8f2f4;border-color:#2b414c}
+body.dark-mode .view-panel input[type="checkbox"],body.dark-mode .view-panel input[type="radio"]{accent-color:#32c49a}
+@media(prefers-reduced-motion:reduce){html,body{transition:none}}
 </style>
 <div class="auth-tools" id="authTools"><span class="auth-status" id="authStatus">Not signed in</span><button type="button" id="authOpen" class="primary">Sign in / Create account</button><button type="button" id="authLogout" class="hidden">Log out</button>
 <button type="button" id="profileOpen" class="hidden">👤 Edit profile</button>
