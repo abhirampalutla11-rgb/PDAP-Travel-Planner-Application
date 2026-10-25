@@ -588,6 +588,29 @@ body.dark-mode .view .destinationVisual,body.dark-mode .view .hero,body.dark-mod
 body:not(.dark-mode) .workspace,body:not(.dark-mode) #workspace,body:not(.dark-mode) .views,body:not(.dark-mode) .view,body:not(.dark-mode) .view.active,body:not(.dark-mode) .view>section:not(.hero),body:not(.dark-mode) .view>div:not(.hero):not(.destinationVisual){background-color:#f4f8f7!important;color:#18313b!important}
 body:not(.dark-mode) .view .card,body:not(.dark-mode) .view form,body:not(.dark-mode) .view fieldset,body:not(.dark-mode) .view .panel,body:not(.dark-mode) .view .form-section,body:not(.dark-mode) .view .result,body:not(.dark-mode) .view .resultCard,body:not(.dark-mode) .view .expenseCard,body:not(.dark-mode) .view .discoverIntro,body:not(.dark-mode) .view .summary>div,body:not(.dark-mode) .view .metric{background-color:#fff!important;color:#18313b!important;border-color:#dce7e5!important}
 
+
+/* Theme visibility hotfix: preserve readable foreground colours and contrast */
+body.dark-mode,body.dark-mode *{text-shadow:none}
+body.dark-mode{background:#0b151d!important;color:#e8f2f4!important}
+body.dark-mode .workspace *,body.dark-mode .view *,body.dark-mode .panel *,body.dark-mode .card *{color:inherit}
+body.dark-mode .view,body.dark-mode .view.active{background:#0b151d!important;color:#e8f2f4!important}
+body.dark-mode .view .card,body.dark-mode .view .destinationCard,body.dark-mode .view .stayCard,body.dark-mode .view .tripCard,body.dark-mode .view .saved,body.dark-mode .view .analyticsBlock,body.dark-mode .view .quickTool,body.dark-mode .view .toolResult,body.dark-mode .view .discoverIntro,body.dark-mode .view .discoverEmpty,body.dark-mode .view .empty,body.dark-mode .view .summary>div,body.dark-mode .view .stat,body.dark-mode .view .expenseMetric,body.dark-mode .view .analyticsMetric{background:#14232d!important;color:#e8f2f4!important;border-color:#2b414c!important}
+body.dark-mode .view h1,body.dark-mode .view h2,body.dark-mode .view h3,body.dark-mode .view h4,body.dark-mode .view p,body.dark-mode .view label,body.dark-mode .view li,body.dark-mode .view strong,body.dark-mode .view span,body.dark-mode .view div,body.dark-mode .view legend{color:#e8f2f4}
+body.dark-mode .view .sub,body.dark-mode .view small,body.dark-mode .view .muted,body.dark-mode .view .hint{color:#a5bac2!important}
+body.dark-mode .view input,body.dark-mode .view select,body.dark-mode .view textarea{background:#0e1c25!important;color:#f4fbfc!important;border:1px solid #49616c!important}
+body.dark-mode .view input::placeholder,body.dark-mode .view textarea::placeholder{color:#a5bac2!important;opacity:1}
+body.dark-mode .view a:not(.primary){color:#82d9c0!important}
+body.dark-mode .view button:not(.primary){background:#203541!important;color:#f4fbfc!important;border-color:#49616c!important}
+body.dark-mode .view button.primary,body.dark-mode .view .primary{background:#137a60!important;color:#fff!important}
+body.dark-mode .topbar,body.dark-mode .appNav,body.dark-mode .mobileDock{background:#0c1922!important;color:#e8f2f4!important;border-color:#2b414c!important}
+body.dark-mode .brandName,body.dark-mode .brandName *,body.dark-mode .authStatus,body.dark-mode #authStatus{color:#e8f2f4!important}
+body:not(.dark-mode){background:#f4f8f7!important;color:#18313b!important}
+body:not(.dark-mode) .view,body:not(.dark-mode) .view.active{background:#f4f8f7!important;color:#18313b!important}
+body:not(.dark-mode) .view .card,body:not(.dark-mode) .view .destinationCard,body:not(.dark-mode) .view .stayCard,body:not(.dark-mode) .view .tripCard,body:not(.dark-mode) .view .saved,body:not(.dark-mode) .view .analyticsBlock,body:not(.dark-mode) .view .quickTool,body:not(.dark-mode) .view .toolResult,body:not(.dark-mode) .view .discoverIntro,body:not(.dark-mode) .view .summary>div,body:not(.dark-mode) .view .stat{background:#fff!important;color:#18313b!important;border-color:#dce7e5!important}
+body:not(.dark-mode) .view h1,body:not(.dark-mode) .view h2,body:not(.dark-mode) .view h3,body:not(.dark-mode) .view h4,body:not(.dark-mode) .view p,body:not(.dark-mode) .view label,body:not(.dark-mode) .view li,body:not(.dark-mode) .view strong{color:#18313b}
+body:not(.dark-mode) .view .sub,body:not(.dark-mode) .view small,body:not(.dark-mode) .view .muted{color:#607782}
+body:not(.dark-mode) .view input,body:not(.dark-mode) .view select,body:not(.dark-mode) .view textarea{background:#fff!important;color:#18313b!important;border-color:#cbdad7!important}
+
 </style>
 <div class="auth-tools" id="authTools"><span class="auth-status" id="authStatus">Not signed in</span><button type="button" id="authOpen" class="primary">Sign in / Create account</button><button type="button" id="authLogout" class="hidden">Log out</button>
 <button type="button" id="profileOpen" class="hidden">👤 Edit profile</button>
