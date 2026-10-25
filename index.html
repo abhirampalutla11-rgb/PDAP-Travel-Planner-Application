@@ -163,7 +163,7 @@ function setupWorkspace(){
  nav.after(workspace);
  hero.remove();dash.remove();stats.remove();analytics.remove();left.remove();stayCard.remove();expenseCard.remove();budgetCard.remove();savedCard.remove();
  panels.dashboard.append(hero,dash,stats,analytics);
- const discoverPreview=document.createElement('section');discoverPreview.className='card';discoverPreview.innerHTML='<p class="eyebrow">SMART TRAVEL PICKS</p><h2>Discover places within your budget</h2><p class="sub">Explore destinations across India, compare estimated trip costs, and find an option that suits your plans.</p><div class="actions"><button type="button" class="primary" id="openDiscoverFromDashboard">Explore destinations ✨</button></div>';panels.dashboard.append(discoverPreview);
+ const discoverPreview=document.createElement('section');discoverPreview.className='card';discoverPreview.innerHTML='<p class="eyebrow">SMART TRAVEL PICKS</p><h2>Discover places within your budget</h2><p class="sub">Explore destinations across India, compare rough origin-aware trip costs, and find an option that suits your plans.</p><div class="actions"><button type="button" class="primary" id="openDiscoverFromDashboard">Explore destinations ✨</button></div>';panels.dashboard.append(discoverPreview);
  const planLayout=document.createElement('div');planLayout.className='layout';planLayout.append(left);panels.plan.append(planLayout,budgetCard);
  panels['stays-view'].append(stayCard);
  panels['expenses-view'].append(expenseCard);
@@ -179,24 +179,49 @@ function setupWorkspace(){
  <div><label for="discTransport">Transport</label><select id="discTransport"><option value="public">Bus / train estimate</option><option value="own">Own vehicle estimate</option><option value="flex">Flexible</option></select></div>
  <div><label for="discStay">Stay preference</label><select id="discStay"><option value="budget">Budget stay</option><option value="none">No overnight stay</option><option value="comfort">Comfort stay</option></select></div>
  <div><button class="primary" type="submit" style="width:100%">Find my destinations ✨</button></div></form></section>
- <div class="card"><h2 id="discoverHeading">Destinations picked for you</h2><p class="sub">Choose a card to add that destination to your trip planner.</p><div id="discoverResults" class="discoverResults" aria-live="polite"></div><p class="discoverDisclaimer">Planning estimates only, not live quotes. Costs vary by departure city, dates, availability, season, and choices. Verify transport, tickets and accommodation prices before booking. Results are not guaranteed to fit every route.</p></div>`;
+ <div class="card"><h2 id="discoverHeading">Destinations picked for you</h2><p class="sub">Choose a card to add that destination to your trip planner.</p><div id="discoverResults" class="discoverResults" aria-live="polite"></div><p class="discoverDisclaimer">Planning estimates only, not live quotes. Transport estimates use approximate straight-line distance from the starting city and broad per-kilometre assumptions, not actual routes or live fares. If your city is not recognised, Guntur is used as the estimate origin. Verify transport, tickets and accommodation prices before booking.</p></div>`;
  const discoverPlaces=[
- {name:'Vijayawada & Bhavani Island',style:'Nature',region:'Andhra Pradesh',tag:'River views',travel:500,stay:700,food:450,activities:300,desc:'Krishna River scenery, island activities and city food.'},
- {name:'Amaravati',style:'Culture',region:'Andhra Pradesh',tag:'Heritage',travel:450,stay:600,food:400,activities:250,desc:'Buddhist heritage and a relaxed cultural day out.'},
- {name:'Suryalanka Beach',style:'Beach',region:'Andhra Pradesh',tag:'Coastal break',travel:900,stay:900,food:500,activities:250,desc:'A coastal getaway with time for the shoreline and local food.'},
- {name:'Araku Valley',style:'Nature',region:'Andhra Pradesh',tag:'Hills & greenery',travel:1800,stay:1100,food:600,activities:500,desc:'Green valleys, viewpoints and coffee-country scenery.'},
- {name:'Visakhapatnam',style:'Beach',region:'Andhra Pradesh',tag:'Beach & city',travel:1600,stay:1200,food:650,activities:500,desc:'Beachfront spots, viewpoints and city attractions.'},
- {name:'Hampi',style:'Culture',region:'Karnataka',tag:'Historic ruins',travel:2600,stay:1100,food:600,activities:500,desc:'Distinctive historic landscapes and architecture.'},
- {name:'Tirupati',style:'Spiritual',region:'Andhra Pradesh',tag:'Spiritual visit',travel:1200,stay:900,food:500,activities:300,desc:'Temple visit and nearby cultural attractions.'},
- {name:'Hyderabad',style:'City',region:'Telangana',tag:'Food & culture',travel:1500,stay:1200,food:700,activities:500,desc:'Historic landmarks, markets and well-known local food.'},
- {name:'Lambasingi',style:'Nature',region:'Andhra Pradesh',tag:'Cool-climate escape',travel:2000,stay:1100,food:550,activities:400,desc:'Countryside views and a quieter hill-station-style escape.'},
- {name:'Pondicherry',style:'Beach',region:'Puducherry',tag:'Coastal town',travel:2400,stay:1400,food:750,activities:500,desc:'Coastal promenades, colourful streets and cafés.'},
- {name:'Mysuru',style:'Culture',region:'Karnataka',tag:'Palaces & gardens',travel:2600,stay:1300,food:650,activities:500,desc:'Palace architecture, gardens and local culture.'},
- {name:'Rishikesh',style:'Adventure',region:'Uttarakhand',tag:'River & adventure',travel:5200,stay:1500,food:800,activities:900,desc:'River scenery and adventure activities; long-distance travel can raise costs.'}
+ {name:'Vijayawada & Bhavani Island',style:'Nature',region:'Andhra Pradesh',tag:'River views',lat:16.5062,lon:80.6480,stay:700,food:450,activities:300,desc:'Krishna River scenery, island activities and city food.'},
+ {name:'Amaravati',style:'Culture',region:'Andhra Pradesh',tag:'Heritage',lat:16.5745,lon:80.3575,stay:600,food:400,activities:250,desc:'Buddhist heritage and a relaxed cultural day out.'},
+ {name:'Suryalanka Beach',style:'Beach',region:'Andhra Pradesh',tag:'Coastal break',lat:15.8650,lon:80.5110,stay:900,food:500,activities:250,desc:'A coastal getaway with time for the shoreline and local food.'},
+ {name:'Araku Valley',style:'Nature',region:'Andhra Pradesh',tag:'Hills & greenery',lat:18.3273,lon:82.8775,stay:1100,food:600,activities:500,desc:'Green valleys, viewpoints and coffee-country scenery.'},
+ {name:'Visakhapatnam',style:'Beach',region:'Andhra Pradesh',tag:'Beach & city',lat:17.6868,lon:83.2185,stay:1200,food:650,activities:500,desc:'Beachfront spots, viewpoints and city attractions.'},
+ {name:'Tirupati',style:'Spiritual',region:'Andhra Pradesh',tag:'Spiritual visit',lat:13.6288,lon:79.4192,stay:900,food:500,activities:300,desc:'Temple visit and nearby cultural attractions.'},
+ {name:'Hyderabad',style:'City',region:'Telangana',tag:'Food & culture',lat:17.3850,lon:78.4867,stay:1200,food:700,activities:500,desc:'Historic landmarks, markets and well-known local food.'},
+ {name:'Hampi',style:'Culture',region:'Karnataka',tag:'Historic ruins',lat:15.3350,lon:76.4600,stay:1100,food:600,activities:500,desc:'Distinctive historic landscapes and architecture.'},
+ {name:'Mysuru',style:'Culture',region:'Karnataka',tag:'Palaces & gardens',lat:12.2958,lon:76.6394,stay:1300,food:650,activities:500,desc:'Palace architecture, gardens and local culture.'},
+ {name:'Pondicherry',style:'Beach',region:'Puducherry',tag:'Coastal town',lat:11.9416,lon:79.8083,stay:1400,food:750,activities:500,desc:'Coastal promenades, colourful streets and cafés.'},
+ {name:'Chennai',style:'City',region:'Tamil Nadu',tag:'City & coastline',lat:13.0827,lon:80.2707,stay:1300,food:700,activities:500,desc:'Marina Beach, museums, neighbourhoods and South Indian food.'},
+ {name:'Madurai',style:'Spiritual',region:'Tamil Nadu',tag:'Temple heritage',lat:9.9252,lon:78.1198,stay:900,food:500,activities:350,desc:'Historic temple architecture, markets and local cuisine.'},
+ {name:'Munnar',style:'Nature',region:'Kerala',tag:'Tea hills',lat:10.0889,lon:77.0595,stay:1500,food:650,activities:550,desc:'Tea gardens, misty hills and scenic viewpoints.'},
+ {name:'Alappuzha',style:'Nature',region:'Kerala',tag:'Backwaters',lat:9.4981,lon:76.3388,stay:1300,food:650,activities:600,desc:'Backwaters, canals and coastal scenery.'},
+ {name:'Goa',style:'Beach',region:'Goa',tag:'Beaches & culture',lat:15.2993,lon:74.1240,stay:1600,food:800,activities:700,desc:'Beaches, heritage neighbourhoods and local markets.'},
+ {name:'Mumbai',style:'City',region:'Maharashtra',tag:'Big-city escape',lat:19.0760,lon:72.8777,stay:1900,food:900,activities:700,desc:'Waterfront landmarks, museums, markets and city life.'},
+ {name:'Pune',style:'City',region:'Maharashtra',tag:'City & forts',lat:18.5204,lon:73.8567,stay:1300,food:700,activities:500,desc:'Urban culture, nearby forts and food spots.'},
+ {name:'Jaipur',style:'Culture',region:'Rajasthan',tag:'Palaces & forts',lat:26.9124,lon:75.7873,stay:1300,food:650,activities:650,desc:'Pink City streets, forts, palaces and traditional markets.'},
+ {name:'Udaipur',style:'Culture',region:'Rajasthan',tag:'Lakes & palaces',lat:24.5854,lon:73.7125,stay:1500,food:700,activities:650,desc:'Lake views, historic palaces and old-city lanes.'},
+ {name:'Delhi',style:'Culture',region:'Delhi',tag:'Capital highlights',lat:28.6139,lon:77.2090,stay:1500,food:800,activities:650,desc:'Historic monuments, museums, markets and varied food.'},
+ {name:'Agra',style:'Culture',region:'Uttar Pradesh',tag:'World heritage',lat:27.1767,lon:78.0081,stay:1200,food:600,activities:650,desc:'The Taj Mahal area, Mughal architecture and historic sites.'},
+ {name:'Varanasi',style:'Spiritual',region:'Uttar Pradesh',tag:'River & heritage',lat:25.3176,lon:82.9739,stay:1000,food:550,activities:500,desc:'Ganga ghats, historic lanes and cultural experiences.'},
+ {name:'Rishikesh',style:'Adventure',region:'Uttarakhand',tag:'River & adventure',lat:30.0869,lon:78.2676,stay:1500,food:800,activities:900,desc:'River scenery and adventure activities; long-distance travel can raise costs.'},
+ {name:'Shimla',style:'Nature',region:'Himachal Pradesh',tag:'Mountain views',lat:31.1048,lon:77.1734,stay:1700,food:750,activities:650,desc:'Mountain scenery, walking streets and colonial-era architecture.'},
+ {name:'Manali',style:'Adventure',region:'Himachal Pradesh',tag:'Himalayan escape',lat:32.2432,lon:77.1892,stay:1700,food:800,activities:900,desc:'Mountain views, outdoor activities and valley scenery.'},
+ {name:'Srinagar',style:'Nature',region:'Jammu & Kashmir',tag:'Lakes & mountains',lat:34.0837,lon:74.7973,stay:1900,food:800,activities:900,desc:'Lake views, gardens and Himalayan landscapes.'},
+ {name:'Kolkata',style:'Culture',region:'West Bengal',tag:'Culture & food',lat:22.5726,lon:88.3639,stay:1100,food:600,activities:450,desc:'Museums, colonial-era landmarks, markets and Bengali food.'},
+ {name:'Darjeeling',style:'Nature',region:'West Bengal',tag:'Tea & mountains',lat:27.0410,lon:88.2663,stay:1500,food:700,activities:650,desc:'Tea gardens, mountain views and heritage rail experiences.'},
+ {name:'Shillong',style:'Nature',region:'Meghalaya',tag:'Waterfalls & hills',lat:25.5788,lon:91.8933,stay:1400,food:650,activities:650,desc:'Green hills, waterfalls and scenic drives.'},
+ {name:'Kaziranga',style:'Adventure',region:'Assam',tag:'Wildlife & nature',lat:26.5775,lon:93.1711,stay:1600,food:700,activities:1000,desc:'Wildlife and nature experiences; check seasonal access and permits.'},
+ {name:'Puri',style:'Spiritual',region:'Odisha',tag:'Temple & beach',lat:19.8135,lon:85.8312,stay:1000,food:550,activities:400,desc:'Coastal scenery, temple heritage and local food.'},
+ {name:'Bengaluru',style:'City',region:'Karnataka',tag:'City & gardens',lat:12.9716,lon:77.5946,stay:1500,food:800,activities:600,desc:'Gardens, museums, food streets and city attractions.'},
+ {name:'Amritsar',style:'Spiritual',region:'Punjab',tag:'Heritage & food',lat:31.6340,lon:74.8723,stay:1100,food:600,activities:450,desc:'Golden Temple, historic sites and Punjabi cuisine.'},
+ {name:'Guwahati',style:'Culture',region:'Assam',tag:'Gateway to the Northeast',lat:26.1445,lon:91.7362,stay:1200,food:600,activities:500,desc:'River views, temples and access to Northeast India.'}
  ];
+ const originCities={'guntur':[16.3067,80.4365],'vijayawada':[16.5062,80.6480],'amaravati':[16.5745,80.3575],'hyderabad':[17.3850,78.4867],'visakhapatnam':[17.6868,83.2185],'vizag':[17.6868,83.2185],'chennai':[13.0827,80.2707],'bengaluru':[12.9716,77.5946],'bangalore':[12.9716,77.5946],'mumbai':[19.0760,72.8777],'pune':[18.5204,73.8567],'delhi':[28.6139,77.2090],'new delhi':[28.6139,77.2090],'kolkata':[22.5726,88.3639],'kochi':[9.9312,76.2673],'thiruvananthapuram':[8.5241,76.9366],'jaipur':[26.9124,75.7873],'lucknow':[26.8467,80.9462],'ahmedabad':[23.0225,72.5714],'patna':[25.5941,85.1376],'bhubaneswar':[20.2961,85.8245],'ranchi':[23.3441,85.3096],'guwahati':[26.1445,91.7362],'chandigarh':[30.7333,76.7794],'srinagar':[34.0837,74.7973],'dehradun':[30.3165,78.0322],'coimbatore':[11.0168,76.9558],'madurai':[9.9252,78.1198],'tirupati':[13.6288,79.4192]};
+ function discoverDistanceKm(a,b){const rad=x=>x*Math.PI/180,lat1=rad(a[0]),lat2=rad(b[0]),dLat=rad(b[0]-a[0]),dLon=rad(b[1]-a[1]);const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;return 6371*2*Math.asin(Math.sqrt(Math.min(1,h)))}
  function discoverEstimate(place,people,days,transport,stay){
-  const travelFactor=transport==='own'?.78:transport==='flex'?1.08:1;
-  const travel=Math.round(place.travel*people*travelFactor);
+  const originText=$('discStart').value.trim().toLowerCase(),origin=originCities[originText]||[16.3067,80.4365],distance=discoverDistanceKm(origin,[place.lat,place.lon]);
+  const perPersonRate=transport==='own'?2.6:transport==='flex'?2.2:1.6;
+  const travel=Math.round(Math.max(180,distance*2*perPersonRate)*(transport==='own'?1:people));
   const nights=stay==='none'?0:Math.max(0,days-1);
   const stayRate=stay==='none'?0:stay==='comfort'?1.65:1;
   const lodging=Math.round(place.stay*nights*people/2*stayRate);
