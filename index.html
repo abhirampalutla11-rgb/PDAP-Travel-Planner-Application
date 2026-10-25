@@ -45,7 +45,7 @@
  function setMode(next){mode=next;$('authTitle').textContent=next==='signup'?'Create your WanderWise account':'Welcome back';$('authSubmit').textContent=next==='signup'?'Create account':'Sign in';$('authPassword').autocomplete=next==='signup'?'new-password':'current-password';say(next==='signup'?'Use an email address you can access. Supabase may send a confirmation email.':'Sign in with your email and password, or choose Google.')}
  function show(){overlay.classList.add('open');setMode('signin');$('authEmail').focus()}
  function hide(){overlay.classList.remove('open')}
- function status(session){const user=session?.user;$('authStatus').textContent=user?(user.email||'Signed in'):'Not signed in';$('authOpen').textContent=user?'Account':'Sign in / Create account';$('authLogout').classList.toggle('hidden',!user);if(user){hide();say('Signed in successfully.')} if(client) window.wwClient=client; window.wwSession=session||null; if(client) void syncAccountData(session||null); }
+ function status(session){const user=session?.user;$('authStatus').textContent=user?(user.email||'Signed in'):'Not signed in';$('authOpen').textContent=user?'Account':'Sign in / Create account';$('authLogout').classList.toggle('hidden',!user);if(user){hide();say('Signed in successfully.')} if(client) window.wwClient=client; window.wwSession=session||null; if(client && typeof window.syncAccountData==='function') void window.syncAccountData(session||null); }
  async function init(){
    if(!window.supabase){say('Authentication library did not load. Refresh and try again.');return}
    client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
@@ -103,11 +103,12 @@ async function syncAccountData(session){
  }catch(err){console.error('WanderWise sync error:',err);const msg='Could not sync your account data: '+(err.message||'Check Supabase table policies.');const box=$('expenseError');if(box){box.textContent=msg;box.classList.remove('hidden')}}
  finally{syncStarted=false}
 }
+window.syncAccountData=syncAccountData;
 async function requireAccount(){if(window.wwClient&&window.wwSession?.user)return true;alert('Please sign in first to save your trips and expenses to your account.');document.getElementById('authOpen')?.click();return false}
 async function upsertTrip(t){
  if(!await requireAccount())return false;
  const row={id:t.id,user_id:window.wwSession.user.id,destination:t.destination,start_date:t.start,end_date:t.end,travellers:t.people,budget:t.budget,interests:t.interests||[],itinerary:[],costs:t.costs||{}};
- const {error}=await window.wwClient.from('trips').upsert(row);if(error){alert('Trip could not be saved: '+error.message);return false}return true
+ const {data,error}=await window.wwClient.from('trips').upsert(row).select().single();if(error){console.error('WanderWise trip save error:',error);alert('Trip could not be saved: '+error.message);return false}if(!data){alert('Supabase did not confirm the trip was saved. Please check the trips table.');return false}return true
 }
 async function deleteTripFromDb(id){if(!await requireAccount())return false;const {error}=await window.wwClient.from('trips').delete().eq('id',id);if(error){alert('Trip could not be deleted: '+error.message);return false}return true}
 async function insertExpenseDb(e){
