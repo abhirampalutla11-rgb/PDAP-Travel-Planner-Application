@@ -229,6 +229,82 @@ input:focus,select:focus{border-color:#20aa98;box-shadow:0 0 0 4px #20aa981b}
 }
 @media(prefers-reduced-motion:reduce){.destinationCard:hover,.stayCard:hover{transform:none}}
 
+
+/* Colour pattern 3: vibrant mosaic travel palette */
+:root{
+ --ink:#22264b;--muted:#626b86;--bg:#f7f6ff;--green:#5145cd;
+ --mint:#e9e7ff;--orange:#ffb45e;--line:#e4e2f4;--red:#bd3658;
+ --ww-navy:#25235c;--ww-teal:#087e8b;--ww-aqua:#42c6c9;--ww-mint:#b8f2e6;
+ --ww-cream:#fff5df;--ww-amber:#ffb45e;--ww-border:#e4e2f4;
+ --ww-shadow:0 14px 36px #30266b12;--ww-radius:22px
+}
+body{
+ background:
+ radial-gradient(ellipse at 0% 0%,#e3f8f4 0,transparent 28%),
+ radial-gradient(ellipse at 100% 8%,#ffe9d5 0,transparent 26%),
+ radial-gradient(ellipse at 82% 85%,#eee7ff 0,transparent 30%),#f7f6ff;
+ color:var(--ink)
+}
+.topbar{background:linear-gradient(100deg,#fff 0%,#f4f1ff 55%,#effbfa 100%);border-bottom-color:#dedaf7}
+.brandName b{color:#5145cd}.brandName strong{color:#08a6a6}
+.appNav{background:#ffffffed;border-bottom-color:#dedaf7;box-shadow:0 8px 26px #30266b12}
+.appNav a{color:#5145cd}
+.appNav a:hover{background:#f0edff}
+.appNav a[aria-current="page"]{background:linear-gradient(120deg,#5145cd,#087e8b);color:#fff;box-shadow:0 7px 18px #5145cd35}
+#view-dashboard .intro{background:linear-gradient(125deg,#28245f 0%,#5145cd 52%,#087e8b 100%)}
+#view-dashboard .intro:after{border-color:#ffffff38;box-shadow:0 0 0 28px #ffffff10,0 0 0 58px #ffffff08}
+#view-dashboard .art{background:linear-gradient(145deg,#ffe5b7 0%,#ffb45e 48%,#ff8f83 100%)}
+#view-dashboard .dashHead{background:linear-gradient(110deg,#e5e1ff 0%,#e4fbf5 55%,#fff0d9 100%);border-color:#dedaf7}
+#view-dashboard .eyebrow,.eyebrow{color:#5145cd}
+#view-dashboard .stat:nth-child(4n+1){background:linear-gradient(145deg,#fff,#f0edff);border-color:#ded8ff}
+#view-dashboard .stat:nth-child(4n+2){background:linear-gradient(145deg,#fff,#e8faf6);border-color:#d2f0e9}
+#view-dashboard .stat:nth-child(4n+3){background:linear-gradient(145deg,#fff,#fff2e2);border-color:#f7e2c6}
+#view-dashboard .stat:nth-child(4n){background:linear-gradient(145deg,#fff,#ffe9ed);border-color:#f4d7df}
+.card{border-color:#e4e2f4;box-shadow:0 10px 30px #30266b0b}
+button,.priceLink{background:#e9e7ff;color:#5145cd}
+.primary{background:linear-gradient(120deg,#ffbd69,#ff956f);color:#38234b}
+button:focus-visible,input:focus-visible,a:focus-visible{outline-color:#5145cd}
+input:focus,select:focus{border-color:#5145cd;box-shadow:0 0 0 4px #5145cd1c}
+.discoverIntro{background:linear-gradient(125deg,#25235c,#5145cd 48%,#087e8b);box-shadow:0 14px 32px #5145cd20}
+#view-discover-view .discoverIntro{background:
+ radial-gradient(circle at 88% 15%,#ffcf8a55,transparent 22%),
+ radial-gradient(circle at 8% 110%,#42c6c955,transparent 34%),
+ linear-gradient(125deg,#25235c 0%,#5145cd 54%,#087e8b 100%)}
+.visual-nature{background:linear-gradient(135deg,#087e70,#71d9ad)}
+.visual-beach{background:linear-gradient(135deg,#087eaa,#56d8dc)}
+.visual-culture{background:linear-gradient(135deg,#6b3ab7,#ffad72)}
+.visual-adventure{background:linear-gradient(135deg,#344c8a,#64c9b5)}
+.visual-spiritual{background:linear-gradient(135deg,#a64f42,#ffc66e)}
+.visual-city{background:linear-gradient(135deg,#343a87,#8c9df4)}
+.destinationCard:nth-child(6n+1){border-top:4px solid #5145cd}
+.destinationCard:nth-child(6n+2){border-top:4px solid #087e8b}
+.destinationCard:nth-child(6n+3){border-top:4px solid #ffad58}
+.destinationCard:nth-child(6n+4){border-top:4px solid #e56f8c}
+.destinationCard:nth-child(6n+5){border-top:4px solid #53b58b}
+.destinationCard:nth-child(6n){border-top:4px solid #8c78ed}
+.destinationContent .destBreakdown{background:linear-gradient(135deg,#f2efff,#effbf8)}
+.destBadge,.tag{background:#e9e7ff;color:#5145cd}
+.destinationCard:nth-child(3n+2) .destBadge{background:#def8f0;color:#087e70}
+.destinationCard:nth-child(3n) .destBadge{background:#fff0dc;color:#96551e}
+#view-stays-view .stayCard:nth-child(3n+1){border-top:4px solid #5145cd}
+#view-stays-view .stayCard:nth-child(3n+2){border-top:4px solid #087e8b}
+#view-stays-view .stayCard:nth-child(3n){border-top:4px solid #ffad58}
+.artOne{background:linear-gradient(135deg,#b8f2e6,#42b89e)}
+.artTwo{background:linear-gradient(135deg,#dedaff,#8c9df4)}
+.artThree{background:linear-gradient(135deg,#ffe6bd,#ff9e78)}
+.stat,.summary>div,.analyticsMetric{background:linear-gradient(145deg,#fff,#f2efff)}
+.analyticsIcon{background:#e5e1ff;color:#5145cd}
+.chartFill{background:linear-gradient(90deg,#5145cd,#087e8b)}
+.chartFill.alt{background:linear-gradient(90deg,#ffbd69,#ff8f83)}
+.expenseMetric:nth-child(3n+1){background:#f0edff}
+.expenseMetric:nth-child(3n+2){background:#e6faf5}
+.expenseMetric:nth-child(3n){background:#fff1df}
+.bar span{background:linear-gradient(90deg,#5145cd,#087e8b)}
+.paidTag{background:#def8e9;color:#18734f}
+.statusPlanned{background:#fff0d6;color:#8c5a15}
+.statusPending{background:#ffe4eb;color:#a32b50}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
 </style>
 </head>
 <body><header class="topbar"><a class="brand" href="#dashboard" aria-label="WanderWise home"><svg class="brandMark" viewBox="0 0 64 64" role="img" aria-label="WanderWise logo"><defs><linearGradient id="wwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#176baf"/><stop offset="1" stop-color="#19b7a5"/></linearGradient></defs><path d="M32 3C17 3 7 14 7 28c0 18 25 33 25 33s25-15 25-33C57 14 47 3 32 3Z" fill="url(#wwg)"/><circle cx="32" cy="27" r="17" fill="#eafafa"/><circle cx="41" cy="18" r="4" fill="#f1a35b"/><path d="M15 31 24 22l7 7 7-9 13 12v8H15Z" fill="#176baf"/><path d="M15 36c8-5 14 4 22 0s10-2 14 0v5H15Z" fill="#19b7a5"/><path d="M3 46c12 7 35 2 47-11" fill="none" stroke="#19b7a5" stroke-width="4" stroke-linecap="round"/><path d="m48 30 8 1-4 7" fill="none" stroke="#19b7a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brandName"><b>Wander</b><strong>Wise</strong><small>Plan Smarter · Travel Better</small></span></a>
