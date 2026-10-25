@@ -436,13 +436,42 @@ body.dark-mode .quickTool,body.dark-mode .toolResult,body.dark-mode .expenseInsi
 .art .heroArtCaption span,.art .heroArtCaption small{color:#e5f5ef}
 .art .heroArtCaption strong{color:#fff}
 
+
+/* Complete dark-mode coverage for controls and profile editor */
+body.dark-mode button,body.dark-mode .auth-box button:not(.primary){background:#24383d;color:var(--ink);border-color:#40565a}
+body.dark-mode button.primary,body.dark-mode .primary{background:linear-gradient(135deg,#167b61,#219b77);color:#fff;border-color:transparent}
+body.dark-mode button:disabled{opacity:.55}
+body.dark-mode .quickTool,body.dark-mode .toolResult,body.dark-mode .expenseInsight>div,body.dark-mode .analyticsBlock,body.dark-mode .analyticsMetric,body.dark-mode .stat,body.dark-mode .summary>div,body.dark-mode .stayBody,body.dark-mode .stayCard,body.dark-mode .saved,body.dark-mode .tripCard,body.dark-mode .destinationCard,body.dark-mode .card{color:var(--ink)}
+body.dark-mode .quickTool p,body.dark-mode .sub,body.dark-mode small,body.dark-mode .auth-divider{color:var(--muted)}
+body.dark-mode .chips label,body.dark-mode .tag,body.dark-mode .mapLinks a{background:#203e36;color:#a5e8cb;border-color:#36534a}
+body.dark-mode .notice{background:#3b3223;color:#ffdda3;border-color:#65512d}
+body.dark-mode .bar{background:#263c40}
+body.dark-mode .auth-box,body.dark-mode .profile-box{background:#17262b;color:var(--ink);border:1px solid #304448}
+body.dark-mode .auth-message{background:#203237;color:var(--ink)}
+body.dark-mode .auth-close{background:#24383d!important;color:var(--ink)!important}
+body.dark-mode .mobileDock{background:#17262bed;border-color:#2c4144}
+body.dark-mode .mobileDock button{background:transparent!important;color:#9ce4c8}
+body.dark-mode .mobileDock button:hover{background:#203e36!important}
+body.dark-mode .themeToggle{background:#24383d;color:#b9f0d9;border-color:#40565a}
+body.dark-mode .appNav a:hover,body.dark-mode .appNav a:focus-visible{background:#203e36;color:#d5f6e8}
+body.dark-mode .actions button:not(.primary),body.dark-mode .formActions button:not(.primary){background:#24383d;color:var(--ink);border-color:#40565a}
+#authStatus{max-width:220px}
+#profileOpen{white-space:nowrap}
+@media(max-width:700px){.auth-tools{flex-wrap:wrap;justify-content:flex-end}.auth-status{max-width:140px}#profileOpen{font-size:.8rem;padding:7px}}
+
 </style>
 </head>
 <body><header class="topbar"><a class="brand" href="#dashboard" aria-label="WanderWise home"><svg class="brandMark" viewBox="0 0 64 64" role="img" aria-label="WanderWise logo"><defs><linearGradient id="wwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#176baf"/><stop offset="1" stop-color="#19b7a5"/></linearGradient></defs><path d="M32 3C17 3 7 14 7 28c0 18 25 33 25 33s25-15 25-33C57 14 47 3 32 3Z" fill="url(#wwg)"/><circle cx="32" cy="27" r="17" fill="#eafafa"/><circle cx="41" cy="18" r="4" fill="#f1a35b"/><path d="M15 31 24 22l7 7 7-9 13 12v8H15Z" fill="#176baf"/><path d="M15 36c8-5 14 4 22 0s10-2 14 0v5H15Z" fill="#19b7a5"/><path d="M3 46c12 7 35 2 47-11" fill="none" stroke="#19b7a5" stroke-width="4" stroke-linecap="round"/><path d="m48 30 8 1-4 7" fill="none" stroke="#19b7a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brandName"><b>Wander</b><strong>Wise</strong><small>Plan Smarter · Travel Better</small></span></a>
 <style>
 .auth-tools{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}.auth-tools button{padding:8px 11px;font-size:.9rem}.auth-status{font-size:.85rem;color:var(--muted);max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-overlay{position:fixed;inset:0;background:#102a24a8;z-index:1000;display:none;place-items:center;padding:16px}.auth-overlay.open{display:grid}.auth-box{width:min(100%,430px);background:#fff;border-radius:20px;padding:24px;box-shadow:0 20px 70px #0003}.auth-box h2{margin:0 0 6px}.auth-box .field{margin-top:12px}.auth-box .actions button{flex:1}.auth-reset{display:block;margin-top:10px;border:0;background:transparent;color:var(--green);text-decoration:underline;padding:6px 0;cursor:pointer;font:inherit;font-weight:700}.auth-message{padding:10px;border-radius:10px;background:#f2f7f3;margin-top:12px;font-size:.9rem;overflow-wrap:anywhere}.auth-close{float:right;background:#f2f5f3;color:var(--ink)}.auth-divider{text-align:center;color:var(--muted);margin:10px 0}@media(max-width:600px){.auth-status{display:none}.auth-tools{gap:5px}.auth-tools button{padding:8px;font-size:.82rem}}
 </style>
-<div class="auth-tools" id="authTools"><span class="auth-status" id="authStatus">Not signed in</span><button type="button" id="authOpen" class="primary">Sign in / Create account</button><button type="button" id="authLogout" class="hidden">Log out</button></div>
+<div class="auth-tools" id="authTools"><span class="auth-status" id="authStatus">Not signed in</span><button type="button" id="authOpen" class="primary">Sign in / Create account</button><button type="button" id="authLogout" class="hidden">Log out</button>
+<button type="button" id="profileOpen" class="hidden">👤 Edit profile</button>
+<div class="auth-overlay" id="profileOverlay" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+ <section class="auth-box profile-box"><button type="button" id="profileClose" class="auth-close" aria-label="Close profile editor">✕</button><p class="eyebrow">MAKE IT YOURS</p><h2 id="profileTitle">Your public profile</h2><p class="sub">Choose the name and username shown beside Log out on this device and account.</p>
+ <form id="profileForm"><div class="field"><label for="profileName">Display name</label><input id="profileName" maxlength="60" autocomplete="name" placeholder="e.g. Abhiram" required></div><div class="field"><label for="profileUsername">Username</label><input id="profileUsername" maxlength="24" minlength="3" pattern="[A-Za-z0-9_]+" autocomplete="nickname" placeholder="e.g. abhiram_travels" required><small>3–24 characters. Letters, numbers and underscores only.</small></div><div class="actions"><button type="submit" class="primary" id="profileSave">Save profile</button><button type="button" id="profileCancel">Cancel</button></div><div class="auth-message" id="profileMessage" role="status" aria-live="polite"></div></form>
+ </section>
+</div></div>
 <div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
  <section class="auth-box"><button type="button" id="authClose" class="auth-close" aria-label="Close">✕</button><p class="eyebrow">WELCOME TO WANDERWISE</p><h2 id="authTitle">Your travel account</h2><p class="sub">Create an account or sign in to continue.</p>
  <form id="authForm"><div class="field"><label for="authEmail">Email address</label><input id="authEmail" type="email" autocomplete="email" required maxlength="254"></div><div class="field"><label for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></div><div class="actions"><button type="submit" class="primary" id="authSubmit">Sign in</button><button type="button" id="authSignup">Create account</button></div><button type="button" id="authReset" class="auth-reset">Forgot password?</button></form>
