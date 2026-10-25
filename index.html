@@ -111,6 +111,53 @@ input:focus,select:focus{border-color:#2b9276;box-shadow:0 0 0 4px #2b92761a;out
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
+
+/* Phase 4: cohesive travel-inspired colour, graphics and finish */
+:root{--ink:#173344;--muted:#627786;--bg:#f4f7f8;--green:#126b63;--mint:#e0f5ef;--orange:#ffb36b;--line:#dce8e9;--red:#b42318}
+body{background:radial-gradient(ellipse at 92% 8%,#fff0df 0,transparent 25%),radial-gradient(ellipse at 4% 25%,#e0f5ef 0,transparent 28%),#f4f7f8}
+.topbar{background:#ffffffed;backdrop-filter:blur(14px);border-bottom-color:#dce8e9}
+.brandMark{filter:drop-shadow(0 5px 8px #126b6326)}
+.brandName b{color:#173f63}.brandName strong{color:#12a995}
+.appNav{border-bottom-color:#dce8e9;box-shadow:0 8px 24px #1733440b}
+.appNav a{border:1px solid #e6eeef;background:#fff}
+.appNav a[aria-current="page"]{background:linear-gradient(135deg,#126b63,#159b8d);color:#fff}
+#view-dashboard .intro{background:radial-gradient(circle at 88% 16%,#ffffff22,transparent 25%),linear-gradient(130deg,#142f49 0%,#126b63 64%,#1aab98 100%);box-shadow:0 18px 38px #123f3b1c}
+#view-dashboard .intro:before{content:"✦";position:absolute;right:24%;top:20%;font-size:1.2rem;color:#ffe0a9;opacity:.8}
+#view-dashboard .art{border:1px solid #f3d4ac;box-shadow:0 16px 32px #a7653020;background:radial-gradient(circle at 78% 25%,#fff8d8 0 7%,transparent 7.5%),linear-gradient(155deg,#ffedc7 0%,#f7c58d 52%,#eaa17f 100%)}
+.heroMountain{filter:drop-shadow(0 10px 7px #38594c30)}
+.dashHead{background:radial-gradient(circle at 94% 0%,#ffffffc7,transparent 28%),linear-gradient(115deg,#dff5eb,#f3f8ed 58%,#ffedda)}
+#view-dashboard .stat{position:relative;overflow:hidden}
+#view-dashboard .stat:after{content:"";position:absolute;width:64px;height:64px;right:-24px;top:-24px;border-radius:50%;background:linear-gradient(135deg,#dff5ebaa,#ffedda66)}
+.card{box-shadow:0 10px 30px #17334408}
+.card:hover{border-color:#cbdedb}
+input,select{background-color:#fff}
+button.primary{background:linear-gradient(135deg,#ffc47e,#ffa95f);color:#3d2b1d}
+button:not(.primary):not(.danger){background:#e0f5ef;color:#126b63}
+.priceLink{background:linear-gradient(135deg,#e0f5ef,#d5f0e8);color:#126b63}
+.discoverIntro{background:radial-gradient(circle at 86% 12%,#ffffff25,transparent 22%),linear-gradient(125deg,#142f49,#126b63 68%,#20a894)}
+.destinationVisual{isolation:isolate}
+.destinationVisual:before{box-shadow:0 0 0 18px #ffffff0b,0 0 0 38px #ffffff08}
+.destinationVisual .visualEmoji{font-size:4.2rem;filter:drop-shadow(0 10px 12px #102a2445);transition:transform .25s ease}
+.destinationCard:hover .visualEmoji{transform:translateY(-4px) scale(1.06)}
+.visual-nature{background:radial-gradient(circle at 70% 15%,#c5f4b755,transparent 27%),linear-gradient(135deg,#0d5d52,#79c99a)}
+.visual-beach{background:radial-gradient(circle at 75% 20%,#e1ffff55,transparent 28%),linear-gradient(135deg,#087b9b,#76d8cf)}
+.visual-culture{background:radial-gradient(circle at 75% 15%,#ffe9bd55,transparent 27%),linear-gradient(135deg,#684083,#e9a76d)}
+.visual-adventure{background:radial-gradient(circle at 70% 12%,#e7f6ff55,transparent 27%),linear-gradient(135deg,#244b6b,#8ac0a6)}
+.visual-spiritual{background:radial-gradient(circle at 72% 15%,#fff0c955,transparent 27%),linear-gradient(135deg,#8a4828,#e7bd72)}
+.visual-city{background:radial-gradient(circle at 72% 15%,#e7eeff55,transparent 27%),linear-gradient(135deg,#203b66,#849dd2)}
+.destBadge{background:#e2f5ef;color:#126b63}
+.destCost{color:#126b63}
+.stayCard{transition:transform .2s ease,box-shadow .2s ease}
+.stayCard:hover{transform:translateY(-3px);box-shadow:0 14px 28px #17334412}
+.hotelArt{position:relative;overflow:hidden}
+.hotelArt:after{content:"";position:absolute;width:120px;height:120px;border:1px solid #ffffff60;border-radius:50%;right:-30px;top:-45px;box-shadow:0 0 0 18px #ffffff14,0 0 0 38px #ffffff10}
+.analyticsIcon{background:linear-gradient(135deg,#e0f5ef,#fff0dc)}
+.chartFill{background:linear-gradient(90deg,#126b63,#23b49e)}
+.chartFill.alt{background:linear-gradient(90deg,#f2a75f,#ffd08b)}
+.notice{border:1px solid #f4dfb8;background:linear-gradient(100deg,#fff7e8,#fffaf2)}
+:focus-visible{scroll-margin-top:100px}
+@media(max-width:700px){#view-dashboard .intro:before{right:12%;top:12%}.topbar{min-height:64px}}
+
 </style>
 </head>
 <body><header class="topbar"><a class="brand" href="#dashboard" aria-label="WanderWise home"><svg class="brandMark" viewBox="0 0 64 64" role="img" aria-label="WanderWise logo"><defs><linearGradient id="wwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#176baf"/><stop offset="1" stop-color="#19b7a5"/></linearGradient></defs><path d="M32 3C17 3 7 14 7 28c0 18 25 33 25 33s25-15 25-33C57 14 47 3 32 3Z" fill="url(#wwg)"/><circle cx="32" cy="27" r="17" fill="#eafafa"/><circle cx="41" cy="18" r="4" fill="#f1a35b"/><path d="M15 31 24 22l7 7 7-9 13 12v8H15Z" fill="#176baf"/><path d="M15 36c8-5 14 4 22 0s10-2 14 0v5H15Z" fill="#19b7a5"/><path d="M3 46c12 7 35 2 47-11" fill="none" stroke="#19b7a5" stroke-width="4" stroke-linecap="round"/><path d="m48 30 8 1-4 7" fill="none" stroke="#19b7a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brandName"><b>Wander</b><strong>Wise</strong><small>Plan Smarter · Travel Better</small></span></a>
