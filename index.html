@@ -467,11 +467,12 @@ body.dark-mode .actions button:not(.primary),body.dark-mode .formActions button:
 </style>
 <div class="auth-tools" id="authTools"><span class="auth-status" id="authStatus">Not signed in</span><button type="button" id="authOpen" class="primary">Sign in / Create account</button><button type="button" id="authLogout" class="hidden">Log out</button>
 <button type="button" id="profileOpen" class="hidden">👤 Edit profile</button>
+</div>
 <div class="auth-overlay" id="profileOverlay" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
  <section class="auth-box profile-box"><button type="button" id="profileClose" class="auth-close" aria-label="Close profile editor">✕</button><p class="eyebrow">MAKE IT YOURS</p><h2 id="profileTitle">Your public profile</h2><p class="sub">Choose the name and username shown beside Log out on this device and account.</p>
  <form id="profileForm"><div class="field"><label for="profileName">Display name</label><input id="profileName" maxlength="60" autocomplete="name" placeholder="e.g. Abhiram" required></div><div class="field"><label for="profileUsername">Username</label><input id="profileUsername" maxlength="24" minlength="3" pattern="[A-Za-z0-9_]+" autocomplete="nickname" placeholder="e.g. abhiram_travels" required><small>3–24 characters. Letters, numbers and underscores only.</small></div><div class="actions"><button type="submit" class="primary" id="profileSave">Save profile</button><button type="button" id="profileCancel">Cancel</button></div><div class="auth-message" id="profileMessage" role="status" aria-live="polite"></div></form>
  </section>
-</div></div>
+</div>
 <div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
  <section class="auth-box"><button type="button" id="authClose" class="auth-close" aria-label="Close">✕</button><p class="eyebrow">WELCOME TO WANDERWISE</p><h2 id="authTitle">Your travel account</h2><p class="sub">Create an account or sign in to continue.</p>
  <form id="authForm"><div class="field"><label for="authEmail">Email address</label><input id="authEmail" type="email" autocomplete="email" required maxlength="254"></div><div class="field"><label for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></div><div class="actions"><button type="submit" class="primary" id="authSubmit">Sign in</button><button type="button" id="authSignup">Create account</button></div><button type="button" id="authReset" class="auth-reset">Forgot password?</button></form>
@@ -766,6 +767,21 @@ renderSaved();renderExpenses();renderAnalytics();renderHotelHistory();
  const paint=()=>{const dark=document.body.classList.contains('dark-mode');button.textContent=dark?'☀️ Light mode':'🌙 Dark mode';button.setAttribute('aria-pressed',String(dark));};
  button.addEventListener('click',()=>{document.body.classList.toggle('dark-mode');localStorage.setItem('wanderwise-theme',document.body.classList.contains('dark-mode')?'dark':'light');paint();});
  topbar.appendChild(button);paint();
+})();
+
+
+/* Profile editor handlers */
+(function(){
+ const $=id=>document.getElementById(id),overlay=$('profileOverlay');
+ if(!overlay||overlay.dataset.initialized==='true')return;overlay.dataset.initialized='true';
+ const key=()=> 'wanderwise-profile:'+(window.wwSession?.user?.id||window.wwSession?.user?.email||'guest');
+ function profile(){const meta=window.wwSession?.user?.user_metadata||{};let local={};try{local=JSON.parse(localStorage.getItem(key())||'{}')}catch{}return {name:meta.full_name||meta.name||local.name||'',username:meta.username||local.username||''}}
+ function paint(){const p=profile(),user=window.wwSession?.user;const edit=$('profileOpen'),logout=$('authLogout'),status=$('authStatus');edit.classList.toggle('hidden',!user);logout.classList.toggle('hidden',!user);if(user){status.textContent=(p.name||user.email||'Signed in')+(p.username?' · @'+p.username:'');status.title=status.textContent;}}
+ function open(){const p=profile();$('profileName').value=p.name;$('profileUsername').value=p.username;$('profileMessage').textContent='';overlay.classList.add('open');$('profileName').focus()}
+ function close(){overlay.classList.remove('open')}
+ $('profileOpen').addEventListener('click',open);$('profileClose').addEventListener('click',close);$('profileCancel').addEventListener('click',close);overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+ $('profileForm').addEventListener('submit',async e=>{e.preventDefault();const name=$('profileName').value.trim(),username=$('profileUsername').value.trim().replace(/^@/,'');const msg=$('profileMessage'),save=$('profileSave');if(!name||!/^[A-Za-z0-9_]{3,24}$/.test(username)){msg.textContent='Enter a display name and a username with 3–24 letters, numbers or underscores.';return}save.disabled=true;msg.textContent='Saving your profile…';try{const user=window.wwSession?.user,client=window.wwClient;if(user&&client){const {error}=await client.auth.updateUser({data:{full_name:name,username}});if(error)throw error}localStorage.setItem(key(),JSON.stringify({name,username}));paint();msg.textContent='Profile saved ✓';setTimeout(close,650)}catch(err){msg.textContent='Could not save your profile: '+(err.message||'Please try again.')}finally{save.disabled=false}});
+ new MutationObserver(paint).observe($('authStatus'),{childList:true,subtree:true,characterData:true});paint();window.addEventListener('storage',paint);
 })();
 
 </script>
