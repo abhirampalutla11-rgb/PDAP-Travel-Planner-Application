@@ -90,7 +90,7 @@ const $=id=>document.getElementById(id);let current=null;const money=n=>new Intl
 const today=new Date();const iso=d=>{let x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10)};$('start').value=iso(today);today.setDate(today.getDate()+2);$('end').value=iso(today);
 function expenses(){try{return JSON.parse(localStorage.getItem('pdapExpenses')||'[]')}catch{return []}}function saveExpenses(a){localStorage.setItem('pdapExpenses',JSON.stringify(a))}
 async function syncAccountData(session){
- if(!client||syncStarted)return; syncStarted=true;
+ const client=window.wwClient; if(!client||syncStarted)return; syncStarted=true;
  try{
   if(!session?.user){localStorage.removeItem('pdapTrips');localStorage.removeItem('pdapExpenses');renderSaved();renderExpenses();return}
   const [{data:tripRows,error:tripError},{data:expenseRows,error:expenseError}]=await Promise.all([
