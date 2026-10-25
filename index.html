@@ -21,6 +21,96 @@
 #view-dashboard .stats{margin-top:16px}
 @media(max-width:600px){.appNav{padding:10px 12px}.appNav a{padding:9px 11px;font-size:.9rem}.workspace{padding:16px 12px 35px}}
 
+/* Phase 4 visual refinement: layout, hierarchy, responsive behavior */
+:root{--bg:#f3f6f4;--line:#e1e9e4;--ink:#18313b;--green:#176b55;--mint:#e2f5eb;--orange:#ffbd73}
+body{background:radial-gradient(ellipse at 8% 0%,#e6f3eb 0,transparent 34%),var(--bg);letter-spacing:-.008em}
+.topbar{padding:13px max(20px,calc((100vw - 1240px)/2));min-height:72px;gap:18px}
+main,.workspace{max-width:1240px}
+main{padding:28px 24px 56px}
+.appNav{padding:12px max(20px,calc((100vw - 1240px)/2));gap:7px;background:#ffffffed;backdrop-filter:blur(16px)}
+.appNav a{padding:10px 15px;border-radius:999px;transition:background .18s ease,color .18s ease,transform .18s ease}
+.appNav a:hover{background:#edf7f1;transform:translateY(-1px)}
+.appNav a[aria-current="page"]{box-shadow:0 6px 14px #176b5526}
+.workspace{padding:28px 24px 54px}
+#view-dashboard .hero{grid-template-columns:minmax(0,1.12fr) minmax(300px,.88fr);gap:20px;margin:4px 0 22px}
+#view-dashboard .hero>div{min-width:0}
+#view-dashboard .intro{padding:clamp(24px,4vw,42px)}
+#view-dashboard .art{padding:28px;min-height:320px}
+.dashHead{margin:0 0 22px;padding:25px 28px;border:1px solid #dcebe2;background:linear-gradient(110deg,#e5f6ed,#f7f9ee 58%,#fff0dc)}
+.dashHead h2{font-size:clamp(1.55rem,3vw,2.1rem);letter-spacing:-.04em}
+.dashBadge{border:1px solid #e2eee6;box-shadow:0 4px 14px #18313b08}
+#view-dashboard .stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 22px}
+#view-dashboard .stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 5px 18px #18313b06}
+#view-dashboard .stat strong{font-size:1.45rem;letter-spacing:-.035em;margin-top:4px}
+.card{border:1px solid #e1e9e4;border-radius:22px;padding:clamp(18px,2.5vw,28px);box-shadow:0 8px 26px #18313b07;margin-bottom:20px}
+.card h2{font-size:1.25rem;letter-spacing:-.025em;margin-bottom:7px}
+.view-panel .layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:20px;align-items:start}
+#view-plan .layout{grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr)}
+#view-plan .layout>section{width:100%}
+#view-plan #budgetPanel{position:sticky;top:110px}
+#view-stays-view>.card,#view-expenses-view>.card,#view-saved-view>.card{max-width:100%;margin-inline:auto}
+#view-discover-view .discoverIntro{padding:clamp(24px,4vw,40px);border:1px solid #ffffff26;box-shadow:0 14px 32px #153e5014;background:radial-gradient(circle at 85% 15%,#ffffff25,transparent 24%),linear-gradient(125deg,#123a4d,#167b77 72%,#28a68c)}
+#view-discover-view .discoverIntro h1{font-size:clamp(2rem,4vw,3rem);line-height:1.08;letter-spacing:-.045em;margin:6px 0 12px;max-width:720px}
+#view-discover-view .card{padding:clamp(18px,2.5vw,28px)}
+.discoverForm{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.discoverForm>div{min-width:0}
+.discoverForm input,.discoverForm select{min-height:46px}
+.discoverResults{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch}
+.destinationCard{height:100%;display:flex;flex-direction:column}
+.destinationVisual{height:160px;flex-shrink:0}
+.destinationContent{display:flex;flex-direction:column;align-items:flex-start;flex:1}
+.destinationContent h3{font-size:1.22rem;line-height:1.25}
+.destinationContent .destCost{margin-top:14px}
+.destinationContent .destBreakdown{width:100%;background:#f7faf8;border-radius:12px;padding:12px}
+.destinationContent .destActions{width:100%;margin-top:auto;padding-top:16px}
+.destinationCard .destActions button{min-width:0;padding:10px 11px}
+#view-stays-view .card h2,#view-expenses-view .card h2,#view-saved-view .card h2{font-size:1.45rem}
+#view-stays-view .stayGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+#view-stays-view .stayCard{border-radius:18px;box-shadow:0 8px 22px #18313b08}
+#view-stays-view .hotelArt{min-height:135px}
+#view-expenses-view .expenseSummary{gap:14px}
+#view-expenses-view .expenseMetric{padding:16px;border:1px solid var(--line);border-radius:15px}
+#view-saved-view #savedTripsCard{min-height:200px}
+button,.priceLink{transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
+button:hover,.priceLink:hover{transform:translateY(-1px);filter:saturate(1.05);box-shadow:0 6px 16px #18313b12}
+button:active{transform:translateY(0)}
+input,select{min-height:44px;border-color:#d0ddd5}
+input:focus,select:focus{border-color:#2b9276;box-shadow:0 0 0 4px #2b92761a;outline:none}
+.footer{padding:24px 12px}
+@media(max-width:1000px){
+ .discoverResults{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .view-panel .layout,#view-plan .layout{grid-template-columns:minmax(0,1fr)}
+ #view-plan #budgetPanel{position:static}
+ .discoverForm{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+ main{padding:18px 14px 36px}
+ .workspace{padding:18px 14px 38px}
+ .topbar{padding:11px 14px}
+ .appNav{padding:10px 14px;gap:6px}
+ .appNav a{font-size:.84rem;padding:9px 11px}
+ #view-dashboard .hero{grid-template-columns:minmax(0,1fr);gap:14px}
+ #view-dashboard .art{min-height:270px}
+ #view-dashboard .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .dashHead{padding:20px;gap:12px}
+ .analyticsMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .analyticsGrid{grid-template-columns:minmax(0,1fr)}
+ #view-stays-view .stayGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:480px){
+ .brandName small{display:none}
+ .auth-tools{margin-left:auto}
+ .appNav{position:sticky;top:0}
+ .appNav a{font-size:.8rem;padding:8px 10px}
+ #view-dashboard .stats,.discoverResults,#view-stays-view .stayGrid{grid-template-columns:minmax(0,1fr)}
+ .discoverForm{grid-template-columns:minmax(0,1fr)}
+ .destinationVisual{height:145px}
+ .expenseSummary{grid-template-columns:minmax(0,1fr)}
+ .analyticsMetrics{grid-template-columns:minmax(0,1fr)}
+ .card{border-radius:18px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body><header class="topbar"><a class="brand" href="#dashboard" aria-label="WanderWise home"><svg class="brandMark" viewBox="0 0 64 64" role="img" aria-label="WanderWise logo"><defs><linearGradient id="wwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#176baf"/><stop offset="1" stop-color="#19b7a5"/></linearGradient></defs><path d="M32 3C17 3 7 14 7 28c0 18 25 33 25 33s25-15 25-33C57 14 47 3 32 3Z" fill="url(#wwg)"/><circle cx="32" cy="27" r="17" fill="#eafafa"/><circle cx="41" cy="18" r="4" fill="#f1a35b"/><path d="M15 31 24 22l7 7 7-9 13 12v8H15Z" fill="#176baf"/><path d="M15 36c8-5 14 4 22 0s10-2 14 0v5H15Z" fill="#19b7a5"/><path d="M3 46c12 7 35 2 47-11" fill="none" stroke="#19b7a5" stroke-width="4" stroke-linecap="round"/><path d="m48 30 8 1-4 7" fill="none" stroke="#19b7a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brandName"><b>Wander</b><strong>Wise</strong><small>Plan Smarter · Travel Better</small></span></a>
