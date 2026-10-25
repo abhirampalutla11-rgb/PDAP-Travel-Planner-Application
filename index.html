@@ -935,6 +935,41 @@ renderSaved();renderExpenses();renderAnalytics();renderHotelHistory();
  new MutationObserver(paint).observe($('authStatus'),{childList:true,subtree:true,characterData:true});paint();window.addEventListener('storage',paint);
 })();
 
+
+/* Quick tool actions: Surprise me, Budget assistant, Mini itinerary builder */
+(function(){
+ const $=id=>document.getElementById(id);
+ const money=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+ const places=()=>window.wanderWiseDiscoverPlaces||[];
+ $('surpriseBtn')?.addEventListener('click',()=>{
+  const box=$('surpriseResult'),budget=Number($('surpriseBudget').value),days=Number($('surpriseDays').value),mood=$('surpriseMood').value;
+  if(!Number.isFinite(budget)||budget<500){box.textContent='Please enter a budget of at least ₹500.';return}
+  let pool=places().filter(p=>mood==='Any'||p.style===mood);
+  if(!pool.length){box.textContent='No destination matches that mood yet. Try Any.';return}
+  const place=pool[Math.floor(Math.random()*pool.length)];
+  const rough=place.food*2*days+place.activities*2*days+place.stay*Math.max(0,days-1)+500;
+  box.innerHTML='<strong>'+place.name+'</strong><p>'+place.desc+'</p><p>Rough starting estimate for 2 people: <strong>'+money(rough)+'</strong> for '+days+' day(s).</p><p>'+(rough<=budget?'This may fit your budget based on a rough estimate.':'This may exceed your budget. Try a closer destination or a higher budget.')+'</p><button type="button" class="primary" id="surprisePlanIt">Plan this destination</button>';
+  $('surprisePlanIt').addEventListener('click',()=>{
+   $('destination').value=place.name;$('people').value=2;$('budget').value=budget;
+   const today=new Date();today.setHours(0,0,0,0);const end=new Date(today);end.setDate(end.getDate()+days-1);
+   const fmt=d=>{const local=new Date(d.getTime()-d.getTimezoneOffset()*60000);return local.toISOString().slice(0,10)};
+   $('start').value=fmt(today);$('end').value=fmt(end);window.wanderWiseAppNav?.querySelector('[data-view="plan"]')?.click();
+  });
+ });
+ $('budgetAssistBtn')?.addEventListener('click',()=>{
+  const total=Number($('budgetAssistTotal').value),people=Number($('budgetAssistPeople').value),days=Number($('budgetAssistDays').value),box=$('budgetAssistResult');
+  if(!Number.isFinite(total)||total<500||!Number.isInteger(people)||people<1||people>20||!Number.isInteger(days)||days<1||days>30){box.textContent='Enter a budget of at least ₹500, 1–20 travellers, and 1–30 days.';return}
+  const parts=[['Transport',.35],['Stay',.25],['Food',.25],['Activities & buffer',.15]];
+  box.innerHTML='<p>Suggested starting split for '+people+' traveller(s), '+days+' day(s):</p>'+parts.map(([label,rate])=>'<div class="expenseRow"><span>'+label+'</span><strong>'+money(total*rate)+'</strong></div>').join('')+'<p><strong>Total: '+money(total)+'</strong></p><small>Planning guide only. Adjust these amounts for your destination and actual prices.</small>';
+ });
+ $('miniPlanBtn')?.addEventListener('click',()=>{
+  const destination=$('miniDestination').value.trim(),days=Number($('miniDays').value),box=$('miniPlanResult');
+  if(!destination){box.textContent='Enter a destination first, for example Araku Valley.';$('miniDestination').focus();return}
+  const templates=[['Morning','Arrive, have breakfast, and visit a popular local attraction.'],['Afternoon','Have lunch and explore a nearby viewpoint, museum, market, or nature spot.'],['Evening','Enjoy a relaxed walk, take photos, and find a local dinner spot.']];
+  box.innerHTML='<strong>'+destination+' · '+days+' day(s)</strong>'+Array.from({length:days},(_,i)=>'<div class="saved"><strong>Day '+(i+1)+'</strong>'+templates.map(([time,task])=>'<p><b>'+time+':</b> '+task+'</p>').join('')+'</div>').join('')+'<small>Starter itinerary only. Check opening hours, travel times, and local conditions before your trip.</small>';
+ });
+})();
+
 </script>
 <nav class="mobileDock" aria-label="Quick navigation">
 <button type="button" data-dock="dashboard"><span>🏠</span>Home</button>
