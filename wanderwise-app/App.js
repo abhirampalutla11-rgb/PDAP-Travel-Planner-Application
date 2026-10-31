@@ -63,7 +63,7 @@ export default function App() {
   const openDestination = name => {
     const item = destinations.find(d => d.name === name);
     setDestination(name);
-    if (item) { setTravel(String(Math.max(500, Math.round(item.low * 0.25))); setStay(String(Math.max(500, Math.round(item.low * 0.22))); }
+    if (item) { setTravel(String(Math.max(500, Math.round(item.low * 0.25)))); setStay(String(Math.max(500, Math.round(item.low * 0.22)))); }
     setTab("Plan");
   };
   const editTrip = trip => {
