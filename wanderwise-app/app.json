@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "WanderWise",
+    "slug": "wanderwise-travel-planner",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.wanderwise.travelplanner",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#176B55"
+      }
+    },
+    "splash": {
+      "backgroundColor": "#176B55"
+    }
+  }
+}
