@@ -623,7 +623,7 @@ function openMultiStopRoute(stops) {
   if (!stops || !stops.length) return Alert.alert("Choose stops", "Select at least one destination first.");
   const origin = stops[0];
   const destination = stops[stops.length - 1];
-  const waypoints = stops.slice(1, -1).map(place => `${place.lat},${place.lon}`).join("/");
+  const waypoints = encodeURIComponent(stops.slice(1, -1).map(place => `${place.lat},${place.lon}`).join("|"));
   const url = stops.length === 1
     ? `https://www.google.com/maps/search/?api=1&query=${origin.lat},${origin.lon}`
     : `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lon}&destination=${destination.lat},${destination.lon}&waypoints=${waypoints}&travelmode=driving`;
