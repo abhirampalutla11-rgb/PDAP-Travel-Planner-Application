@@ -566,11 +566,23 @@ export default function App() {
         {!expenses.length?<Empty title="No expenses yet" text="Add your first cost above to start tracking spending."/>:expenses.map(e=><View key={e.id} style={styles.savedCard}><View style={{flex:1}}><Text style={styles.destinationName}>{e.name}</Text><Text style={styles.destinationNote}>{new Date(e.date).toLocaleDateString()}</Text></View><Text style={styles.destinationBudget}>{money(e.amount)}</Text><Pressable onPress={()=>removeExpense(e.id)} style={styles.removeButton}><Text style={{color:"#B42318",fontWeight:"800"}}>Delete</Text></Pressable></View>)}
       </>}
       {tab==="Groups" && <>
-        <Heading eyebrow="PLAN TOGETHER" title="Group trip planner" subtitle="Keep a simple traveller list and assign planning roles. This first version is stored on this device; shared invitations and live collaboration are still being built."/>
-        <View style={styles.card}><Field label={t("groupName")} value={groupName} onChangeText={setGroupName} placeholder="Weekend getaway"/><Field label={t("memberName")} value={memberName} onChangeText={setMemberName} placeholder="Enter a traveller name"/><Text style={styles.label}>{t("role")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:10}}>{["Organizer","Planner","Traveller","Viewer"].map(role=><Pressable key={role} onPress={()=>setMemberRole(role)} style={[styles.chip,memberRole===role&&styles.chipActive]}><Text style={[styles.chipText,memberRole===role&&styles.chipTextActive]}>{role}</Text></Pressable>)}</View><Button title={t("addMember")} primary onPress={addGroupMember}/></View>
-        <Heading eyebrow="TRAVEL CREW" title={groupName}/>
+        <Heading eyebrow={t("groupTitle").toUpperCase()} title={t("groupTitle")} subtitle={t("groupSubtitle")}/>
+        <View style={styles.card}>
+          <Field label={t("groupName")} value={groupName} onChangeText={setGroupName} placeholder="Weekend getaway"/>
+          <Field label={t("memberName")} value={memberName} onChangeText={setMemberName} placeholder="Enter a traveller name"/>
+          <Text style={styles.label}>{t("role")}</Text>
+          <View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:10}}>{["Organizer","Planner","Traveller","Viewer"].map(role=><Pressable key={role} onPress={()=>setMemberRole(role)} style={[styles.chip,memberRole===role&&styles.chipActive]}><Text style={[styles.chipText,memberRole===role&&styles.chipTextActive]}>{role}</Text></Pressable>)}</View>
+          <Button title={t("addMember")} primary onPress={addGroupMember}/>
+          <Button title={t("shareInvite")} onPress={shareGroupInvite}/>
+        </View>
+        <View style={styles.card}>
+          <Text style={styles.formHeading}>{t("joinCode")}</Text>
+          <Field label={t("pasteCode")} value={joinGroupCode} onChangeText={setJoinGroupCode} placeholder="WWGROUP1:…"/>
+          <Button title={t("joinGroup")} onPress={joinGroupFromCode} primary/>
+        </View>
+        <Heading eyebrow={t("travelCrew")} title={groupName} subtitle={groupMembers.length + " " + t("members")}/>
         {!groupMembers.length?<Empty title={t("emptyCrew")} text={t("addCrew")}/>:groupMembers.map(member=><View key={member.id} style={styles.savedCard}><View style={{flex:1}}><Text style={styles.destinationName}>{member.name}</Text><Text style={styles.destinationNote}>{member.role}</Text></View><Pressable onPress={()=>persistGroupMembers(groupMembers.filter(m=>m.id!==member.id))} style={styles.removeButton}><Text style={{color:"#B42318",fontWeight:"800"}}>{t("remove")}</Text></Pressable></View>)}
-        <View style={styles.tipCard}><Text style={styles.tipTitle}>🔒 Privacy note</Text><Text style={styles.sectionCopy}>No contacts or location are accessed. Names and roles stay in local app storage until you export or clear the app data.</Text></View>
+        <View style={styles.tipCard}><Text style={styles.tipTitle}>{t("privacy")}</Text><Text style={styles.sectionCopy}>{t("privacyCopy")}</Text></View>
       </>}
       {tab==="Routes" && <>
         <Heading eyebrow={t("routeEyebrow")} title={t("routeTitle")} subtitle={t("routeSubtitle")}/>
