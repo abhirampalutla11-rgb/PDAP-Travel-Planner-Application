@@ -162,6 +162,14 @@ export default function App() {
     } catch (error) { setSyncMessage("Saved locally. Cloud trip sync failed: " + (error?.message || "Unknown error")); return trip; }
   };
   const signOut = async () => { const { error } = await supabase.auth.signOut(); if (error) Alert.alert("Sign out failed", error.message); };
+  const clearTrips = async () => {
+    if (session?.user) { const { error } = await supabase.from("trips").delete().eq("user_id", session.user.id); if (error) return Alert.alert("Could not clear trips", error.message); }
+    await persistTrips([]);
+  };
+  const clearExpenses = async () => {
+    if (session?.user) { const { error } = await supabase.from("expenses").delete().eq("user_id", session.user.id); if (error) return Alert.alert("Could not clear expenses", error.message); }
+    await persistExpenses([]);
+  };
   const persistTrips = async next => { setSaved(next); try { await AsyncStorage.setItem(KEY, JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Trips could not be saved on this device."); } };
   const persistExpenses = async next => { setExpenses(next); try { await AsyncStorage.setItem("wanderwise.expenses.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Expenses could not be saved on this device."); } };
   const persistGroupMembers = async next => { setGroupMembers(next); try { await AsyncStorage.setItem("wanderwise.groupMembers.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Group list could not be saved on this device."); } };
@@ -320,7 +328,7 @@ export default function App() {
         {!!session?.user && <><Button title="Sync now ↻" onPress={()=>syncCloudData(session)}/><Button title="Sign out" danger onPress={signOut}/></>}
         <Text style={styles.sectionCopy}>{syncMessage}</Text>
         <Text style={styles.sectionCopy}>Your local copy remains available. Account sync uses the same Supabase project as the WanderWise website.</Text>
-        <Text style={styles.sectionCopy}>Estimates are indicative and are not live prices.</Text><Button title="Export my data ↗" onPress={exportLocalData}/><Text style={styles.sectionCopy}>Export includes saved trips, expenses, and the local group roster.</Text><Text style={styles.sectionCopy}>Location access is not requested or collected by this version.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistTrips([])}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistExpenses([])}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></View></View>}
+        <Text style={styles.sectionCopy}>Estimates are indicative and are not live prices.</Text><Button title="Export my data ↗" onPress={exportLocalData}/><Text style={styles.sectionCopy}>Export includes saved trips, expenses, and the local group roster.</Text><Text style={styles.sectionCopy}>Location access is not requested or collected by this version.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearTrips}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearExpenses}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></View></View>}
   </SafeAreaView>;
 }
 function Metric({label,value,icon}) { return <View style={styles.metric}><Text style={{fontSize:22}}>{icon}</Text><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text></View>; }
