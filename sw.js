@@ -1,6 +1,6 @@
 /* WanderWise service worker: lightweight offline shell for the GitHub Pages app. */
 const BASE = new URL("./", self.location).pathname;
-const CACHE_NAME = "wanderwise-shell-v5";
+const CACHE_NAME = "wanderwise-shell-v6";
 const APP_FILES = [
   BASE,
   BASE + "manifest.webmanifest",
