@@ -16,7 +16,7 @@ on:
       - "build/wanderwise-android-v2"
 
 concurrency:
-  group: wanderwise-android-${{ github.event.pull_request.head.ref || github.ref_name }}
+  group: wanderwise-android-retry-v2-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
