@@ -1,29 +1,42 @@
 # WanderWise Android App
 
-A native React Native + Expo starter for the PDAP Travel Planner Application.
+Native Android application for the PDAP Travel Planner, built with React Native and Expo.
 
-## Included in this first MVP
-- Native Android screen layout with Explore, Plan Trip, and Saved Trips tabs.
-- Searchable destination suggestions.
-- Editable trip duration, travellers, and cost estimates.
-- Automatic total and per-person budget calculations.
-- Save/remove trips locally on the device using AsyncStorage.
-- WanderWise brand styling and Android application ID.
+## Current app modules
 
-## Run locally
-1. Install Node.js LTS.
-2. Install dependencies: `npm install`
-3. Start Expo: `npx expo start`
-4. Install Expo Go on an Android phone and scan the QR code, or run on an Android emulator.
+- Dashboard
+- Explore and Discover with the same 34 destination records used by the current WanderWise website
+- For You budget matches
+- Plan Trip with editable costs, a budget snapshot, remaining/over-budget calculation, and a day-by-day starter itinerary
+- Stays
+- Expenses
+- Analytics / trip insights
+- Saved Trips with edit and delete
+- Settings with English (default), Telugu, Hindi, and Tamil navigation preferences
 
-## Build a shareable APK
-1. Create/sign in to a free Expo account.
-2. Install EAS CLI: `npm install -g eas-cli`
-3. Sign in: `eas login`
-4. From this folder, run: `eas build -p android --profile preview`
-5. Download the APK from the completed build page and install it on your Android phone.
+Trip and expense data are currently stored locally on the Android device with AsyncStorage. The app clearly labels destination and cost values as estimates, not live prices.
 
-Cloud build quotas and account requirements may change. An APK can be shared directly; Google Play publishing is separate and may require a registration fee.
+## Free local development
 
-## Current scope / important notes
-This is a native-app MVP, not a finished production release. The first version stores saved trips on the current device only. It does not yet sync trips to Supabase, use live hotel prices, or provide live maps. The website and this app are separate projects, so changes to one do not automatically change the other.
+1. Install the current Node.js LTS release and Android Studio (including Android SDK and platform tools).
+2. Open a terminal in this folder and run `npm install`.
+3. Run `npx expo start` and use Expo Go on an Android phone to preview the app.
+4. For a native Android build, run `npx expo prebuild --platform android`.
+5. Open the generated `android` folder in Android Studio, allow Gradle sync, then build an APK using **Build > Build Bundle(s) / APK(s) > Build APK(s)**. The debug APK is under `android/app/build/outputs/apk/debug/`.
+
+For a release APK from a local terminal, run `cd android && ./gradlew assembleRelease` (Windows: `cd android && gradlew.bat assembleRelease`). Android signing must be configured before distributing a production release.
+
+## Free CI APK build
+
+The public GitHub Actions workflow can build an APK without an Expo cloud token. Run it from the repository's **Actions** tab using **Build WanderWise Android APK**. The generated APK is uploaded as a workflow artifact.
+
+## Not yet implemented / next development stages
+
+- Supabase authentication and cross-device sync (the website has a Supabase setup; the native app is not connected yet).
+- Real shared group-trip collaboration and role permissions.
+- Native scheduled notifications and live weather, delay, or price-drop feeds. These need device notification integration and suitable data providers; no paid API is included.
+- Full translation of every screen (the language selector and primary navigation are localized in this pass).
+- Live maps, route navigation, and live accommodation availability.
+- Full dark-mode theme.
+
+No paid APIs, subscriptions, or paid SDKs are required for the current app source. The APK build can be run locally or through the public-repository workflow.
