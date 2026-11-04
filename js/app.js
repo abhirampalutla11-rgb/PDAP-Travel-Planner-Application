@@ -148,7 +148,7 @@ function setupWorkspace(){
  hero.remove();dash.remove();stats.remove();analytics.remove();left.remove();stayCard.remove();expenseCard.remove();budgetCard.remove();savedCard.remove();
  panels.dashboard.append(hero,dash,stats,analytics);
  const discoverPreview=document.createElement('section');discoverPreview.className='card';discoverPreview.innerHTML='<p class="eyebrow">SMART TRAVEL PICKS</p><h2>Discover places within your budget</h2><p class="sub">Explore destinations across India, compare rough origin-aware trip costs, and find an option that suits your plans.</p><div class="actions"><button type="button" class="primary" id="openDiscoverFromDashboard">Explore destinations ✨</button></div>';panels.dashboard.append(discoverPreview);
- const planLayout=document.createElement('div');planLayout.className='layout';planLayout.append(left);panels.plan.append(planLayout,budgetCard);
+ const planLayout=document.createElement('div');planLayout.className='layout';planLayout.append(left,budgetCard);panels.plan.append(planLayout);
  panels['stays-view'].append(stayCard);
  panels['expenses-view'].append(expenseCard);
  panels['saved-view'].append(savedCard);
