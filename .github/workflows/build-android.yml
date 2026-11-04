@@ -38,6 +38,14 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - name: Repair Android NDK installation
+        shell: bash
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT}}"
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager | sort | tail -n 1)"
+          if [ -z "$SDKMANAGER" ]; then echo "Android sdkmanager was not found"; exit 1; fi
+          rm -rf "$SDK_ROOT/ndk/27.1.12297006"
+          yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "ndk;27.1.12297006"
       - name: Install dependencies
         run: npm install
       - name: Check Expo project
