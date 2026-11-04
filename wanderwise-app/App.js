@@ -7,13 +7,52 @@ import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 import * as Notifications from "expo-notifications";
+import * as Crypto from "expo-crypto";
+import * as SecureStore from "expo-secure-store";
+import nacl from "tweetnacl";
+import naclUtil from "tweetnacl-util";
 
 const GREEN = "#176B55", MINT = "#DFF4E9", ORANGE = "#F1A35B";
 const INK = "#172B3A", MUTED = "#60717D", LINE = "#E4EAE6";
 const KEY = "wanderwise.savedTrips.v1";
 const SUPABASE_URL = "https://hmjtzyakidwtkzhhbgzd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3dsWrDTOtIz6eWi_ndF4Qw_GJIUY8o6";
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } });
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { storage: encryptedStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } });
+const STORAGE_KEY = "wanderwise.device-encryption-key.v1";
+const getDeviceEncryptionKey = async () => {
+  let encoded = await SecureStore.getItemAsync(STORAGE_KEY);
+  if (!encoded) {
+    encoded = naclUtil.encodeBase64(await Crypto.getRandomBytesAsync(nacl.secretbox.keyLength));
+    await SecureStore.setItemAsync(STORAGE_KEY, encoded);
+  }
+  return naclUtil.decodeBase64(encoded);
+};
+const encryptedStorage = {
+  async getItem(key) {
+    const raw = await AsyncStorage.getItem(key);
+    if (raw == null) return null;
+    if (!raw.startsWith("wwenc1:")) {
+      await this.setItem(key, raw);
+      return raw;
+    }
+    const payload = naclUtil.decodeBase64(raw.slice(7));
+    const nonce = payload.slice(0, nacl.secretbox.nonceLength);
+    const box = payload.slice(nacl.secretbox.nonceLength);
+    const clear = nacl.secretbox.open(box, nonce, await getDeviceEncryptionKey());
+    if (!clear) throw new Error("Saved data could not be decrypted on this device.");
+    return naclUtil.encodeUTF8(clear);
+  },
+  async setItem(key, value) {
+    const nonce = await Crypto.getRandomBytesAsync(nacl.secretbox.nonceLength);
+    const box = nacl.secretbox(naclUtil.decodeUTF8(String(value)), nonce, await getDeviceEncryptionKey());
+    const payload = new Uint8Array(nonce.length + box.length);
+    payload.set(nonce, 0); payload.set(box, nonce.length);
+    await AsyncStorage.setItem(key, "wwenc1:" + naclUtil.encodeBase64(payload));
+  },
+  async removeItem(key) { return AsyncStorage.removeItem(key); },
+  async multiGet(keys) { return Promise.all(keys.map(async key => [key, await this.getItem(key)])); },
+  async multiSet(items) { await Promise.all(items.map(([key, value]) => this.setItem(key, value))); }
+};
 let cloudSyncInProgress = false;
 const UI_TEXT = {
   English: { home:"⌂ Home", explore:"⌖ Explore", discover:"✦ Discover", forYou:"✧ For You", plan:"✎ Plan trip", stays:"⌂ Stays", expenses:"₹ Expenses", analytics:"▥ Insights", saved:"♡ Saved", tagline:"Small budget. Big memories.", settings:"Settings", language:"App language" },
@@ -107,7 +146,7 @@ export default function App() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1", "wanderwise.groupMembers.v1", "wanderwise.notifications.v1"]).then(rows => {
+    encryptedStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1", "wanderwise.groupMembers.v1", "wanderwise.notifications.v1"]).then(rows => {
       const trips = rows[0]?.[1], costs = rows[1]?.[1], savedLanguage = rows[2]?.[1], members = rows[3]?.[1], reminders = rows[4]?.[1];
       if (trips) setSaved(JSON.parse(trips));
       if (costs) setExpenses(JSON.parse(costs));
@@ -132,8 +171,8 @@ export default function App() {
     cloudSyncInProgress = true;
     setSyncMessage("Syncing your WanderWise account…");
     try {
-      const localTrips = JSON.parse((await AsyncStorage.getItem(KEY)) || "[]");
-      const localExpenses = JSON.parse((await AsyncStorage.getItem("wanderwise.expenses.v1")) || "[]");
+      const localTrips = JSON.parse((await encryptedStorage.getItem(KEY)) || "[]");
+      const localExpenses = JSON.parse((await encryptedStorage.getItem("wanderwise.expenses.v1")) || "[]");
       const isUuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
       for (const trip of localTrips.filter(item => !item.cloudId && !isUuid(item.id))) {
         const start = /^\d{4}-\d{2}-\d{2}$/.test(trip.date || "") ? trip.date : new Date().toISOString().slice(0, 10);
@@ -166,7 +205,7 @@ export default function App() {
       const mergedTrips = [...cloudTrips, ...localTrips.filter(item => !item.cloudId && !tripIds.has(item.id))];
       const mergedExpenses = [...cloudExpenses, ...localExpenses.filter(item => !isUuid(item.id) && !expenseIds.has(item.id))];
       setSaved(mergedTrips); setExpenses(mergedExpenses);
-      await AsyncStorage.multiSet([[KEY, JSON.stringify(mergedTrips)], ["wanderwise.expenses.v1", JSON.stringify(mergedExpenses)]]);
+      await encryptedStorage.multiSet([[KEY, JSON.stringify(mergedTrips)], ["wanderwise.expenses.v1", JSON.stringify(mergedExpenses)]]);
       setSyncMessage("Synced " + cloudTrips.length + " trip(s) and " + cloudExpenses.length + " expense(s).");
     } catch (error) {
       setSyncMessage("Cloud sync unavailable: " + (error?.message || "Check your account and Supabase table policies.") + " Your local data is still available.");
@@ -249,14 +288,14 @@ export default function App() {
     if (notificationsEnabled) {
       await Notifications.cancelAllScheduledNotificationsAsync();
       setNotificationsEnabled(false);
-      await AsyncStorage.setItem("wanderwise.notifications.v1", "false");
+      await encryptedStorage.setItem("wanderwise.notifications.v1", "false");
       return;
     }
     let permission = await Notifications.getPermissionsAsync();
     if (permission.status !== "granted") permission = await Notifications.requestPermissionsAsync();
     if (permission.status !== "granted") return Alert.alert("Notifications not enabled", "Allow notifications in Android settings to receive trip reminders.");
     setNotificationsEnabled(true);
-    await AsyncStorage.setItem("wanderwise.notifications.v1", "true");
+    await encryptedStorage.setItem("wanderwise.notifications.v1", "true");
     await refreshTripReminders(saved, true);
   };
   const clearTrips = async () => {
@@ -267,9 +306,9 @@ export default function App() {
     if (session?.user) { const { error } = await supabase.from("expenses").delete().eq("user_id", session.user.id); if (error) return Alert.alert("Could not clear expenses", error.message); }
     await persistExpenses([]);
   };
-  const persistTrips = async next => { setSaved(next); try { await AsyncStorage.setItem(KEY, JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Trips could not be saved on this device."); } };
-  const persistExpenses = async next => { setExpenses(next); try { await AsyncStorage.setItem("wanderwise.expenses.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Expenses could not be saved on this device."); } };
-  const persistGroupMembers = async next => { setGroupMembers(next); try { await AsyncStorage.setItem("wanderwise.groupMembers.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Group list could not be saved on this device."); } };
+  const persistTrips = async next => { setSaved(next); try { await encryptedStorage.setItem(KEY, JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Trips could not be saved on this device."); } };
+  const persistExpenses = async next => { setExpenses(next); try { await encryptedStorage.setItem("wanderwise.expenses.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Expenses could not be saved on this device."); } };
+  const persistGroupMembers = async next => { setGroupMembers(next); try { await encryptedStorage.setItem("wanderwise.groupMembers.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Group list could not be saved on this device."); } };
   const addGroupMember = () => { const name=memberName.trim(); if(!name) return Alert.alert("Add a member","Enter a name first."); if(groupMembers.some(m=>m.name.toLowerCase()===name.toLowerCase())) return Alert.alert("Already added","This member is already in the group."); persistGroupMembers([...groupMembers,{id:String(Date.now()),name,role:memberRole}]); setMemberName(""); };
   const exportLocalData = async () => { try { await Share.share({title:"WanderWise data export",message:JSON.stringify({app:"WanderWise",exportedAt:new Date().toISOString(),savedTrips:saved,expenses,groupName,groupMembers},null,2)}); } catch { Alert.alert("Export unavailable","Could not open the Android share sheet."); } };
   const openMap = place => {
@@ -465,7 +504,7 @@ export default function App() {
       </>}
       <View style={styles.footer}><Text style={styles.footerBrand}>WanderWise</Text><Text style={styles.footerText}>Thoughtful travel for real-world budgets.</Text><Text style={styles.footerText}>A PDAP project · Built for memorable journeys</Text></View>
     </ScrollView>
-    {showSettings&&<View style={styles.modalBackdrop}><ScrollView style={styles.modal} keyboardShouldPersistTaps="handled"><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);AsyncStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>Trip reminders</Text>
+    {showSettings&&<View style={styles.modalBackdrop}><ScrollView style={styles.modal} keyboardShouldPersistTaps="handled"><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);encryptedStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>Trip reminders</Text>
         <Text style={styles.sectionCopy}>Receive a local Android notification one day before a saved trip with a travel checklist nudge. This does not require a paid service.</Text>
         <Button title={notificationsEnabled ? "Turn off trip reminders" : "Enable trip reminders"} primary onPress={toggleTripReminders}/>
         <Text style={styles.sectionCopy}>{notificationsEnabled ? "Trip reminders are enabled. Android notification permission is active." : "Trip reminders are off until you enable them."}</Text>
