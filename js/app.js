@@ -141,7 +141,7 @@ function setupWorkspace(){
  if(!hero||!dash||!stats||!analytics||!left||!stayCard||!expenseCard||!budgetCard||!savedCard)return;
  const workspace=document.createElement('div');workspace.className='workspace';workspace.id='workspace';
  const panels={};
- [['dashboard','Dashboard'],['plan','Plan Trip'],['stays-view','Hotels & Stays'],['expenses-view','Expenses & Payments'],['saved-view','Saved Trips'],['discover-view','Discover Places'],['for-you','For You']].forEach(([id,title])=>{const p=document.createElement('section');p.className='view-panel'+(id==='dashboard'?' active':'');p.id='view-'+id;p.setAttribute('aria-label',title);panels[id]=p;workspace.appendChild(p)});
+ [['dashboard','Dashboard'],['plan','Plan Trip'],['stays-view','Hotels & Stays'],['expenses-view','Expenses & Payments'],['saved-view','Saved Trips'],['discover-view','Discover Places'],['maps-view','Maps & Routes'],['for-you','For You']].forEach(([id,title])=>{const p=document.createElement('section');p.className='view-panel'+(id==='dashboard'?' active':'');p.id='view-'+id;p.setAttribute('aria-label',title);panels[id]=p;workspace.appendChild(p)});
  const nav=main.querySelector('#appNav');
  if(!nav){console.error('WanderWise: navigation was not found.');return}
  nav.after(workspace);
@@ -221,6 +221,64 @@ function setupWorkspace(){
   const total=travel+lodging+food+activities;
   return {travel,lodging,food,activities,total};
  }
+
+ function initWanderWiseMap(){
+  const panel=panels['maps-view'];
+  panel.innerHTML='<div class="discoverIntro"><p class="eyebrow">OPEN MAPS, OPEN POSSIBILITIES</p><h1>Explore the map. Shape your route.</h1><p>Browse curated Indian destinations, then create a road-trip route with up to two optional stops.</p></div><section class="card"><div class="mapControls"><div class="field"><label for="mapOrigin">Starting city</label><select id="mapOrigin"></select></div><div class="field"><label for="mapStop1">Optional stop 1</label><select id="mapStop1"><option value="">No stop</option></select></div><div class="field"><label for="mapStop2">Optional stop 2</label><select id="mapStop2"><option value="">No stop</option></select></div><div class="field"><label for="mapDestination">Final destination</label><select id="mapDestination"></select></div></div><div class="actions"><button type="button" class="primary" id="buildMapRoute">Build road route</button><button type="button" id="clearMapRoute">Clear route</button></div><div id="mapRouteSummary" class="mapSummary" role="status" aria-live="polite">Choose a start city and destination. Route estimates load only when you request them.</div><div class="mapLegend"><span>📍 Curated destination markers</span><span>🟢 Start</span><span>🔴 Finish</span><span>🔵 Suggested road route</span></div><div id="wwMap" role="application" aria-label="Interactive map of Indian destinations"></div><p class="mapFineprint">Map data © OpenStreetMap contributors. Road routes use the public OSRM demo service when available. Distances and durations are estimates, not live traffic or guaranteed travel times. The demo service may be unavailable or rate-limited. This map requires an internet connection.</p></section><section class="card"><h2>Explore destinations on the map</h2><div id="mapPlaceList" class="mapPlaces"></div></section>';
+  const origin=$('mapOrigin'),stop1=$('mapStop1'),stop2=$('mapStop2'),destination=$('mapDestination');
+  const names=discoverPlaces.map(p=>p.name);
+  origin.innerHTML=Object.keys(originCities).map(k=>'<option value="'+esc(k)+'">'+esc(k.replace(/\b\w/g,c=>c.toUpperCase()))+'</option>').join('');
+  origin.value='guntur';
+  const opts=names.map(n=>'<option value="'+esc(n)+'">'+esc(n)+'</option>').join('');
+  stop1.insertAdjacentHTML('beforeend',opts);stop2.insertAdjacentHTML('beforeend',opts);destination.innerHTML=opts;
+  destination.value=discoverPlaces.some(p=>p.name==='Araku Valley')?'Araku Valley':names[0];
+  $('mapPlaceList').innerHTML=discoverPlaces.slice(0,12).map(p=>'<article class="mapPlace"><strong>'+esc(p.name)+'</strong><p class="mapFineprint">'+esc(p.region)+' · '+esc(p.style)+'</p><button type="button" data-map-place="'+esc(p.name)+'">Set as destination</button></article>').join('');
+  let map=null,markers=[],routeLayer=null,startMarker=null,endMarker=null;
+  const summary=$('mapRouteSummary');
+  function coordsFor(name){const p=discoverPlaces.find(x=>x.name===name);return p?[p.lat,p.lon]:null}
+  function clearRoute(){if(routeLayer){map.removeLayer(routeLayer);routeLayer=null}if(startMarker){map.removeLayer(startMarker);startMarker=null}if(endMarker){map.removeLayer(endMarker);endMarker=null}summary.textContent='Route cleared. Choose stops and build a new route.'}
+  function initMap(){
+   if(map)return true;
+   if(!window.L){$('wwMap').innerHTML='<p class="mapFineprint" style="padding:18px">The map library could not load. Check your internet connection or use the OpenStreetMap link below.</p><p><a href="https://www.openstreetmap.org/" target="_blank" rel="noopener noreferrer">Open OpenStreetMap ↗</a></p>';return false}
+   map=L.map('wwMap').setView([22.8,79.0],4);
+   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>'}).addTo(map);
+   discoverPlaces.forEach(p=>{const m=L.marker([p.lat,p.lon]).addTo(map);m.bindPopup('<strong>'+esc(p.name)+'</strong><br>'+esc(p.region)+' · '+esc(p.style));markers.push(m)});
+   return true;
+  }
+  async function buildRoute(){
+   if(!initMap())return;
+   clearRoute();
+   const originName=origin.value,originPoint=originCities[originName],finishName=destination.value,finish=coordsFor(finishName);
+   if(!originPoint||!finish){summary.textContent='Choose a supported starting city and a destination.';return}
+   const chosen=[stop1.value,stop2.value].filter(Boolean);
+   if(chosen.includes(finishName)||new Set(chosen).size!==chosen.length){summary.textContent='Choose different places for each stop and final destination.';return}
+   const points=[{name:originName.replace(/\b\w/g,c=>c.toUpperCase()),coord:originPoint},...chosen.map(n=>({name:n,coord:coordsFor(n)})),{name:finishName,coord:finish}];
+   if(points.some(p=>!p.coord)){summary.textContent='One of the selected places has no mapped coordinates yet.';return}
+   summary.textContent='Finding a road route…';
+   $('buildMapRoute').disabled=true;
+   try{
+    const path=points.map(p=>p.coord[1]+','+p.coord[0]).join(';');
+    const url='https://router.project-osrm.org/trip/v1/driving/'+path+'?source=first&destination=last&roundtrip=false&overview=full&geometries=geojson';
+    const response=await fetch(url,{headers:{'Accept':'application/json'}});
+    if(!response.ok)throw new Error('The public routing service is temporarily unavailable.');
+    const data=await response.json();
+    if(data.code!=='Ok'||!data.trips?.[0]?.geometry)throw new Error('No road route was returned for these stops. Try a different combination.');
+    const trip=data.trips[0],ordered=(data.waypoints||[]).map((w,i)=>({name:points[i].name,index:w.waypoint_index})).sort((a,b)=>a.index-b.index);
+    routeLayer=L.geoJSON(trip.geometry,{style:{color:'#2477d4',weight:5,opacity:.85}}).addTo(map);
+    startMarker=L.marker(points[0].coord).addTo(map).bindPopup('Start: '+esc(points[0].name));
+    endMarker=L.marker(points[points.length-1].coord).addTo(map).bindPopup('Finish: '+esc(points[points.length-1].name));
+    map.fitBounds(routeLayer.getBounds(),{padding:[28,28]});
+    const km=(trip.distance/1000).toFixed(1),hours=trip.duration/3600,hrs=Math.floor(hours),mins=Math.round((hours-hrs)*60);
+    summary.innerHTML='<strong>Estimated road route: '+km+' km · '+(hrs?hrs+' hr ':'')+mins+' min</strong><br><span class="mapFineprint">Suggested visit order: '+ordered.map(p=>esc(p.name)).join(' → ')+'</span><br><span class="mapFineprint">Road distance and typical routing duration from OSRM. No live traffic. Verify road conditions and actual travel time before departure.</span>';
+   }catch(err){summary.textContent=(err.message||'Could not build route.')+' You can still open the places in OpenStreetMap.'}
+   finally{$('buildMapRoute').disabled=false}
+  }
+  $('buildMapRoute').addEventListener('click',buildRoute);
+  $('clearMapRoute').addEventListener('click',()=>{if(initMap())clearRoute()});
+  $('mapPlaceList').querySelectorAll('[data-map-place]').forEach(b=>b.addEventListener('click',()=>{destination.value=b.dataset.mapPlace;if(initMap()){const c=coordsFor(destination.value);map.setView(c,9)}summary.textContent=destination.value+' selected. Build a route when ready.'}));
+  initMap();
+  window.wanderWiseMap={invalidateSize:()=>{if(initMap())map.invalidateSize()}};
+ }
  window.wanderWiseRenderDiscover=renderDiscover;
  function renderDiscover(){
   const budget=Number($('discBudget').value),people=Number($('discPeople').value),days=Number($('discDays').value),style=$('discStyle').value,transport=$('discTransport').value,stay=$('discStay').value;
@@ -236,9 +294,10 @@ function setupWorkspace(){
  $('discoverForm').addEventListener('submit',e=>{e.preventDefault();renderDiscover()});
  ['discStart','discBudget','discPeople','discDays','discStyle','discTransport','discStay'].forEach(id=>$(id).addEventListener('change',renderDiscover));
  renderDiscover();
+ initWanderWiseMap();
 
  $('openDiscoverFromDashboard').addEventListener('click',()=>nav.querySelector('[data-view="discover-view"]')?.click());
- function activate(id,updateHash=true){if(!panels[id])id='dashboard';Object.entries(panels).forEach(([key,p])=>p.classList.toggle('active',key===id));nav.querySelectorAll('[data-view]').forEach(a=>{if(a.dataset.view===id)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});if(updateHash)history.replaceState(null,'','#'+id);window.scrollTo({top:0,behavior:'auto'});}
+ function activate(id,updateHash=true){if(!panels[id])id='dashboard';Object.entries(panels).forEach(([key,p])=>p.classList.toggle('active',key===id));nav.querySelectorAll('[data-view]').forEach(a=>{if(a.dataset.view===id)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});if(id==='maps-view')requestAnimationFrame(()=>window.wanderWiseMap?.invalidateSize());if(updateHash)history.replaceState(null,'','#'+id);window.scrollTo({top:0,behavior:'auto'});}
  nav.querySelectorAll('[data-view]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();activate(a.dataset.view)}));
  window.addEventListener('hashchange',()=>activate(location.hash.slice(1),false));
  const requested=location.hash.slice(1);activate(panels[requested]?requested:'dashboard',false);
