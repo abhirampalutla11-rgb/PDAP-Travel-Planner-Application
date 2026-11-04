@@ -279,7 +279,7 @@ export default function App() {
         if (reminder <= new Date()) continue;
         await Notifications.scheduleNotificationAsync({
           content: { title: "Your WanderWise trip is coming up ✈️", body: trip.destination + " is one day away. Check your plan and travel essentials.", data: { tripId: trip.id } },
-          trigger: reminder
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: reminder, channelId: "trip-reminders" }
         });
       }
     } catch (error) { setSyncMessage("Trip reminder could not be scheduled: " + (error?.message || "Notification service unavailable.")); }
