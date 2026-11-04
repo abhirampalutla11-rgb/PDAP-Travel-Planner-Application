@@ -165,12 +165,25 @@ export default function App() {
       if (reminders === "true") setNotificationsEnabled(true);
     }).catch(() => Alert.alert("Storage notice", "Saved data could not be loaded on this launch."));
     supabase.auth.getSession().then(({ data }) => { setSession(data.session || null); if (data.session) syncCloudData(data.session); });
+    const handleOAuthRedirect = async url => {
+      if (!url || !url.startsWith("wanderwise://auth/callback")) return;
+      try {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+        if (error) throw error;
+        if (data?.session) setSyncMessage("Google sign-in successful. Syncing your WanderWise data…");
+      } catch (error) {
+        setSyncMessage("Google sign-in could not be completed.");
+        Alert.alert("Google sign-in error", error?.message || "Please try again.");
+      }
+    };
+    Linking.getInitialURL().then(handleOAuthRedirect).catch(() => {});
+    const urlListener = Linking.addEventListener("url", event => handleOAuthRedirect(event.url));
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession || null);
       if (nextSession) setTimeout(() => syncCloudData(nextSession), 0);
       else setSyncMessage("Signed out. Your local copy remains on this device.");
     });
-    return () => authListener.subscription.unsubscribe();
+    return () => { authListener.subscription.unsubscribe(); urlListener.remove(); };
   }, []);
   useEffect(() => {
     if (routeStopNames.length < 2) {
@@ -283,6 +296,22 @@ export default function App() {
       setAuthPassword("");
     } catch (error) { Alert.alert("Account error", error?.message || "Please try again."); }
     finally { setAuthBusy(false); }
+  };
+  const handleGoogleSignIn = async () => {
+    setAuthBusy(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: "wanderwise://auth/callback", skipBrowserRedirect: true }
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error("Supabase did not return a Google authorization URL.");
+      await Linking.openURL(data.url);
+    } catch (error) {
+      Alert.alert("Google sign-in unavailable", error?.message || "Please try again.");
+    } finally {
+      setAuthBusy(false);
+    }
   };
   const saveTripToCloud = async trip => {
     if (!session?.user) return trip;
@@ -460,7 +489,7 @@ export default function App() {
   return <SafeAreaView style={styles.safe}>
     <StatusBar barStyle="light-content" backgroundColor={GREEN}/>
     <View style={styles.header}>
-      <View style={styles.brandIcon}><Text style={{fontSize:23}}>✈</Text></View>
+      <View style={styles.brandIcon}><View style={styles.brandCompass}><View style={styles.brandNeedle}/></View></View>
       <View style={{flex:1}}><Text style={styles.brand}>Wander<Text style={styles.brandAccent}>Wise</Text></Text><Text style={styles.tagline}>{t("tagline")}</Text></View>
       <Pressable accessibilityLabel="Open settings" onPress={()=>setShowSettings(true)} style={styles.settingsButton}><Text style={{fontSize:21}}>⚙</Text></Pressable>
     </View>
@@ -638,7 +667,7 @@ export default function App() {
         <Text style={styles.sectionCopy}>{notificationsEnabled ? "Trip reminders are enabled. Android notification permission is active." : "Trip reminders are off until you enable them."}</Text>
         <Text style={styles.sectionCopy}>Account sync</Text>
         <Text style={styles.sectionCopy}>{session?.user ? "Signed in as " + (session.user.email || "WanderWise traveller") : "Sign in or create an account to sync trips and expenses across devices."}</Text>
-        {!session?.user && <><Field label="Email" value={authEmail} onChangeText={setAuthEmail} placeholder="you@example.com"/><Field label="Password" value={authPassword} onChangeText={setAuthPassword} placeholder="At least 6 characters"/><View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}><Button title={authBusy ? "Please wait…" : authMode==="signup" ? "Create account" : "Sign in"} primary onPress={handleAuth}/><Button title={authMode==="signup" ? "I have an account" : "Create account"} onPress={()=>setAuthMode(authMode==="signup"?"signin":"signup")}/></View></>}
+        {!session?.user && <><Button title={authBusy ? "Opening Google…" : "Continue with Google"} primary onPress={handleGoogleSignIn}/><Text style={styles.sectionCopy}>or continue with email</Text><Field label="Email" value={authEmail} onChangeText={setAuthEmail} placeholder="you@example.com"/><Field label="Password" value={authPassword} onChangeText={setAuthPassword} placeholder="At least 6 characters"/><View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}><Button title={authBusy ? "Please wait…" : authMode==="signup" ? "Create account" : "Sign in"} primary onPress={handleAuth}/><Button title={authMode==="signup" ? "I have an account" : "Create account"} onPress={()=>setAuthMode(authMode==="signup"?"signin":"signup")}/></View></>}
         {!!session?.user && <><Button title="Sync now ↻" onPress={()=>syncCloudData(session)}/><Button title="Sign out" danger onPress={signOut}/></>}
         <Text style={styles.sectionCopy}>{syncMessage}</Text>
         <Text style={styles.sectionCopy}>Your local copy and account session are encrypted on this device with a device-held key. Account sync uses encrypted HTTPS communication and the same Supabase project as the WanderWise website.</Text>
@@ -671,7 +700,7 @@ function DestinationCard({item,onPress,detailed=false}) { return <Pressable onPr
 function Empty({title,text,action,onPress}) { return <View style={styles.empty}><Text style={{fontSize:38}}>🧳</Text><Text style={styles.emptyTitle}>{title}</Text><Text style={styles.sectionCopy}>{text}</Text>{!!action&&<Button title={action} primary onPress={onPress}/>}</View>; }
 const styles = StyleSheet.create({
  safe:{flex:1,backgroundColor:"#F5F7F4"}, header:{backgroundColor:GREEN,paddingHorizontal:16,paddingVertical:12,flexDirection:"row",alignItems:"center",gap:11},
- brandIcon:{width:44,height:44,borderRadius:14,backgroundColor:"#FFFFFF20",alignItems:"center",justifyContent:"center"},brand:{color:"#FFFFFF",fontSize:23,fontWeight:"900",letterSpacing:-.8},brandAccent:{color:ORANGE},tagline:{color:"#DFF4E9",fontSize:11,fontWeight:"600",marginTop:-1},
+ brandIcon:{width:44,height:44,borderRadius:14,backgroundColor:"#FFFFFF20",alignItems:"center",justifyContent:"center"},brandCompass:{width:30,height:30,borderRadius:15,borderWidth:2,borderColor:MINT,alignItems:"center",justifyContent:"center"},brandNeedle:{width:0,height:0,borderLeftWidth:6,borderRightWidth:6,borderBottomWidth:19,borderLeftColor:"transparent",borderRightColor:"transparent",borderBottomColor:ORANGE,transform:[{rotate:"35deg"}]},brand:{color:"#FFFFFF",fontSize:23,fontWeight:"900",letterSpacing:-.8},brandAccent:{color:ORANGE},tagline:{color:"#DFF4E9",fontSize:11,fontWeight:"600",marginTop:-1},
  settingsButton:{padding:9,backgroundColor:"#FFFFFF20",borderRadius:12},navScroll:{flexGrow:0,backgroundColor:"#FFFFFF",borderBottomWidth:1,borderBottomColor:LINE},tabs:{paddingHorizontal:10,paddingVertical:8,gap:6,alignItems:"center"},
  tab:{paddingVertical:11,paddingHorizontal:13,alignItems:"center",borderRadius:11,backgroundColor:"#F8FAF8"},activeTab:{backgroundColor:MINT},tabText:{fontSize:12,color:MUTED,fontWeight:"700"},activeTabText:{color:GREEN},
  content:{padding:17,paddingBottom:40},hero:{backgroundColor:GREEN,borderRadius:22,padding:23,overflow:"hidden",marginBottom:24},eyebrow:{color:"#1A9A7C",fontSize:10,fontWeight:"900",letterSpacing:1.3,marginBottom:8},
