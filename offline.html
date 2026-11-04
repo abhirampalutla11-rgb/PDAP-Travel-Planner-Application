@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#153e50">
+  <title>You're offline | WanderWise</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#f3f6f4;color:#18313b;font:16px/1.55 system-ui, sans-serif}
+    main{max-width:520px;padding:34px;background:#fff;border:1px solid #e1e9e4;border-radius:24px;text-align:center;box-shadow:0 14px 40px #18313b12}
+    .mark{width:76px;height:76px;margin:0 auto 18px}h1{margin:0 0 10px;font-size:1.8rem;letter-spacing:-.04em}p{color:#60717d}
+    button{border:0;border-radius:12px;padding:12px 18px;background:#176b55;color:#fff;font:inherit;font-weight:750;cursor:pointer}
+  </style>
+</head>
+<body>
+  <main>
+    <img class="mark" src="./icons/wanderwise.svg" alt="">
+    <h1>You're currently offline</h1>
+    <p>WanderWise needs an internet connection for fresh destination information and account sync. Your previously saved browser data may still be available when you reopen the app.</p>
+    <p>Reconnect and try again. We won't pretend that live prices or availability are available offline.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </main>
+</body>
+</html>
