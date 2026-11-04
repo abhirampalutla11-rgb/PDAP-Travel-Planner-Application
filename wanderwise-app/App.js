@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   SafeAreaView, ScrollView, View, Text, TextInput, Pressable,
-  StyleSheet, StatusBar, Alert
+  StyleSheet, StatusBar, Alert, Linking, Share
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -16,40 +16,40 @@ const UI_TEXT = {
 };
 
 const destinations = [
-  { name: "Vijayawada & Bhavani Island", region: "Andhra Pradesh", note: "River views", budget: "₹2,350–₹4,465", low: 2350, category: "Nature", emoji: "🌿", highlights: "Krishna River scenery, island activities and city food." },
-  { name: "Amaravati", region: "Andhra Pradesh", note: "Heritage", budget: "₹2,100–₹3,990", low: 2100, category: "Culture", emoji: "🏛️", highlights: "Buddhist heritage and a relaxed cultural day out." },
-  { name: "Suryalanka Beach", region: "Andhra Pradesh", note: "Coastal break", budget: "₹2,450–₹4,655", low: 2450, category: "Beach", emoji: "🏖️", highlights: "A coastal getaway with time for the shoreline and local food." },
-  { name: "Araku Valley", region: "Andhra Pradesh", note: "Hills & greenery", budget: "₹3,250–₹6,175", low: 3250, category: "Nature", emoji: "🌿", highlights: "Green valleys, viewpoints and coffee-country scenery." },
-  { name: "Visakhapatnam", region: "Andhra Pradesh", note: "Beach & city", budget: "₹3,400–₹6,460", low: 3400, category: "Beach", emoji: "🏖️", highlights: "Beachfront spots, viewpoints and city attractions." },
-  { name: "Tirupati", region: "Andhra Pradesh", note: "Spiritual visit", budget: "₹2,550–₹4,845", low: 2550, category: "Spiritual", emoji: "🛕", highlights: "Temple visit and nearby cultural attractions." },
-  { name: "Hyderabad", region: "Telangana", note: "Food & culture", budget: "₹3,500–₹6,650", low: 3500, category: "City", emoji: "🌆", highlights: "Historic landmarks, markets and well-known local food." },
-  { name: "Hampi", region: "Karnataka", note: "Historic ruins", budget: "₹3,250–₹6,175", low: 3250, category: "Culture", emoji: "🏛️", highlights: "Distinctive historic landscapes and architecture." },
-  { name: "Mysuru", region: "Karnataka", note: "Palaces & gardens", budget: "₹3,450–₹6,555", low: 3450, category: "Culture", emoji: "🏛️", highlights: "Palace architecture, gardens and local culture." },
-  { name: "Pondicherry", region: "Puducherry", note: "Coastal town", budget: "₹3,700–₹7,030", low: 3700, category: "Beach", emoji: "🏖️", highlights: "Coastal promenades, colourful streets and cafés." },
-  { name: "Chennai", region: "Tamil Nadu", note: "City & coastline", budget: "₹3,550–₹6,745", low: 3550, category: "City", emoji: "🌆", highlights: "Marina Beach, museums, neighbourhoods and South Indian food." },
-  { name: "Madurai", region: "Tamil Nadu", note: "Temple heritage", budget: "₹2,650–₹5,035", low: 2650, category: "Spiritual", emoji: "🛕", highlights: "Historic temple architecture, markets and local cuisine." },
-  { name: "Munnar", region: "Kerala", note: "Tea hills", budget: "₹3,650–₹6,935", low: 3650, category: "Nature", emoji: "🌿", highlights: "Tea gardens, misty hills and scenic viewpoints." },
-  { name: "Alappuzha", region: "Kerala", note: "Backwaters", budget: "₹3,650–₹6,935", low: 3650, category: "Nature", emoji: "🌿", highlights: "Backwaters, canals and coastal scenery." },
-  { name: "Goa", region: "Goa", note: "Beaches & culture", budget: "₹4,300–₹8,170", low: 4300, category: "Beach", emoji: "🏖️", highlights: "Beaches, heritage neighbourhoods and local markets." },
-  { name: "Mumbai", region: "Maharashtra", note: "Big-city escape", budget: "₹4,650–₹8,835", low: 4650, category: "City", emoji: "🌆", highlights: "Waterfront landmarks, museums, markets and city life." },
-  { name: "Pune", region: "Maharashtra", note: "City & forts", budget: "₹3,550–₹6,745", low: 3550, category: "City", emoji: "🌆", highlights: "Urban culture, nearby forts and food spots." },
-  { name: "Jaipur", region: "Rajasthan", note: "Palaces & forts", budget: "₹3,750–₹7,125", low: 3750, category: "Culture", emoji: "🏛️", highlights: "Pink City streets, forts, palaces and traditional markets." },
-  { name: "Udaipur", region: "Rajasthan", note: "Lakes & palaces", budget: "₹3,950–₹7,505", low: 3950, category: "Culture", emoji: "🏛️", highlights: "Lake views, historic palaces and old-city lanes." },
-  { name: "Delhi", region: "Delhi", note: "Capital highlights", budget: "₹4,150–₹7,885", low: 4150, category: "Culture", emoji: "🏛️", highlights: "Historic monuments, museums, markets and varied food." },
-  { name: "Agra", region: "Uttar Pradesh", note: "World heritage", budget: "₹3,600–₹6,840", low: 3600, category: "Culture", emoji: "🏛️", highlights: "The Taj Mahal area, Mughal architecture and historic sites." },
-  { name: "Varanasi", region: "Uttar Pradesh", note: "River & heritage", budget: "₹3,100–₹5,890", low: 3100, category: "Spiritual", emoji: "🛕", highlights: "Ganga ghats, historic lanes and cultural experiences." },
-  { name: "Rishikesh", region: "Uttarakhand", note: "River & adventure", budget: "₹4,650–₹8,835", low: 4650, category: "Adventure", emoji: "⛰️", highlights: "River scenery and adventure activities; long-distance travel can raise costs." },
-  { name: "Shimla", region: "Himachal Pradesh", note: "Mountain views", budget: "₹4,150–₹7,885", low: 4150, category: "Nature", emoji: "🌿", highlights: "Mountain scenery, walking streets and colonial-era architecture." },
-  { name: "Manali", region: "Himachal Pradesh", note: "Himalayan escape", budget: "₹4,750–₹9,025", low: 4750, category: "Adventure", emoji: "⛰️", highlights: "Mountain views, outdoor activities and valley scenery." },
-  { name: "Srinagar", region: "Jammu & Kashmir", note: "Lakes & mountains", budget: "₹4,850–₹9,215", low: 4850, category: "Nature", emoji: "🌿", highlights: "Lake views, gardens and Himalayan landscapes." },
-  { name: "Kolkata", region: "West Bengal", note: "Culture & food", budget: "₹3,150–₹5,985", low: 3150, category: "Culture", emoji: "🏛️", highlights: "Museums, colonial-era landmarks, markets and Bengali food." },
-  { name: "Darjeeling", region: "West Bengal", note: "Tea & mountains", budget: "₹3,950–₹7,505", low: 3950, category: "Nature", emoji: "🌿", highlights: "Tea gardens, mountain views and heritage rail experiences." },
-  { name: "Shillong", region: "Meghalaya", note: "Waterfalls & hills", budget: "₹3,800–₹7,220", low: 3800, category: "Nature", emoji: "🌿", highlights: "Green hills, waterfalls and scenic drives." },
-  { name: "Kaziranga", region: "Assam", note: "Wildlife & nature", budget: "₹4,700–₹8,930", low: 4700, category: "Adventure", emoji: "⛰️", highlights: "Wildlife and nature experiences; check seasonal access and permits." },
-  { name: "Puri", region: "Odisha", note: "Temple & beach", budget: "₹2,900–₹5,510", low: 2900, category: "Spiritual", emoji: "🛕", highlights: "Coastal scenery, temple heritage and local food." },
-  { name: "Bengaluru", region: "Karnataka", note: "City & gardens", budget: "₹4,050–₹7,695", low: 4050, category: "City", emoji: "🌆", highlights: "Gardens, museums, food streets and city attractions." },
-  { name: "Amritsar", region: "Punjab", note: "Heritage & food", budget: "₹3,150–₹5,985", low: 3150, category: "Spiritual", emoji: "🛕", highlights: "Golden Temple, historic sites and Punjabi cuisine." },
-  { name: "Guwahati", region: "Assam", note: "Gateway to the Northeast", budget: "₹3,300–₹6,270", low: 3300, category: "Culture", emoji: "🏛️", highlights: "River views, temples and access to Northeast India." }
+  { name: "Vijayawada & Bhavani Island", region: "Andhra Pradesh", note: "River views", budget: "₹2,350–₹4,465", low: 2350, category: "Nature", emoji: "🌿", lat: 16.5062, lon: 80.648, highlights: "Krishna River scenery, island activities and city food." },
+  { name: "Amaravati", region: "Andhra Pradesh", note: "Heritage", budget: "₹2,100–₹3,990", low: 2100, category: "Culture", emoji: "🏛️", lat: 16.5745, lon: 80.3575, highlights: "Buddhist heritage and a relaxed cultural day out." },
+  { name: "Suryalanka Beach", region: "Andhra Pradesh", note: "Coastal break", budget: "₹2,450–₹4,655", low: 2450, category: "Beach", emoji: "🏖️", lat: 15.865, lon: 80.511, highlights: "A coastal getaway with time for the shoreline and local food." },
+  { name: "Araku Valley", region: "Andhra Pradesh", note: "Hills & greenery", budget: "₹3,250–₹6,175", low: 3250, category: "Nature", emoji: "🌿", lat: 18.3273, lon: 82.8775, highlights: "Green valleys, viewpoints and coffee-country scenery." },
+  { name: "Visakhapatnam", region: "Andhra Pradesh", note: "Beach & city", budget: "₹3,400–₹6,460", low: 3400, category: "Beach", emoji: "🏖️", lat: 17.6868, lon: 83.2185, highlights: "Beachfront spots, viewpoints and city attractions." },
+  { name: "Tirupati", region: "Andhra Pradesh", note: "Spiritual visit", budget: "₹2,550–₹4,845", low: 2550, category: "Spiritual", emoji: "🛕", lat: 13.6288, lon: 79.4192, highlights: "Temple visit and nearby cultural attractions." },
+  { name: "Hyderabad", region: "Telangana", note: "Food & culture", budget: "₹3,500–₹6,650", low: 3500, category: "City", emoji: "🌆", lat: 17.385, lon: 78.4867, highlights: "Historic landmarks, markets and well-known local food." },
+  { name: "Hampi", region: "Karnataka", note: "Historic ruins", budget: "₹3,250–₹6,175", low: 3250, category: "Culture", emoji: "🏛️", lat: 15.335, lon: 76.46, highlights: "Distinctive historic landscapes and architecture." },
+  { name: "Mysuru", region: "Karnataka", note: "Palaces & gardens", budget: "₹3,450–₹6,555", low: 3450, category: "Culture", emoji: "🏛️", lat: 12.2958, lon: 76.6394, highlights: "Palace architecture, gardens and local culture." },
+  { name: "Pondicherry", region: "Puducherry", note: "Coastal town", budget: "₹3,700–₹7,030", low: 3700, category: "Beach", emoji: "🏖️", lat: 11.9416, lon: 79.8083, highlights: "Coastal promenades, colourful streets and cafés." },
+  { name: "Chennai", region: "Tamil Nadu", note: "City & coastline", budget: "₹3,550–₹6,745", low: 3550, category: "City", emoji: "🌆", lat: 13.0827, lon: 80.2707, highlights: "Marina Beach, museums, neighbourhoods and South Indian food." },
+  { name: "Madurai", region: "Tamil Nadu", note: "Temple heritage", budget: "₹2,650–₹5,035", low: 2650, category: "Spiritual", emoji: "🛕", lat: 9.9252, lon: 78.1198, highlights: "Historic temple architecture, markets and local cuisine." },
+  { name: "Munnar", region: "Kerala", note: "Tea hills", budget: "₹3,650–₹6,935", low: 3650, category: "Nature", emoji: "🌿", lat: 10.0889, lon: 77.0595, highlights: "Tea gardens, misty hills and scenic viewpoints." },
+  { name: "Alappuzha", region: "Kerala", note: "Backwaters", budget: "₹3,650–₹6,935", low: 3650, category: "Nature", emoji: "🌿", lat: 9.4981, lon: 76.3388, highlights: "Backwaters, canals and coastal scenery." },
+  { name: "Goa", region: "Goa", note: "Beaches & culture", budget: "₹4,300–₹8,170", low: 4300, category: "Beach", emoji: "🏖️", lat: 15.2993, lon: 74.124, highlights: "Beaches, heritage neighbourhoods and local markets." },
+  { name: "Mumbai", region: "Maharashtra", note: "Big-city escape", budget: "₹4,650–₹8,835", low: 4650, category: "City", emoji: "🌆", lat: 19.076, lon: 72.8777, highlights: "Waterfront landmarks, museums, markets and city life." },
+  { name: "Pune", region: "Maharashtra", note: "City & forts", budget: "₹3,550–₹6,745", low: 3550, category: "City", emoji: "🌆", lat: 18.5204, lon: 73.8567, highlights: "Urban culture, nearby forts and food spots." },
+  { name: "Jaipur", region: "Rajasthan", note: "Palaces & forts", budget: "₹3,750–₹7,125", low: 3750, category: "Culture", emoji: "🏛️", lat: 26.9124, lon: 75.7873, highlights: "Pink City streets, forts, palaces and traditional markets." },
+  { name: "Udaipur", region: "Rajasthan", note: "Lakes & palaces", budget: "₹3,950–₹7,505", low: 3950, category: "Culture", emoji: "🏛️", lat: 24.5854, lon: 73.7125, highlights: "Lake views, historic palaces and old-city lanes." },
+  { name: "Delhi", region: "Delhi", note: "Capital highlights", budget: "₹4,150–₹7,885", low: 4150, category: "Culture", emoji: "🏛️", lat: 28.6139, lon: 77.209, highlights: "Historic monuments, museums, markets and varied food." },
+  { name: "Agra", region: "Uttar Pradesh", note: "World heritage", budget: "₹3,600–₹6,840", low: 3600, category: "Culture", emoji: "🏛️", lat: 27.1767, lon: 78.0081, highlights: "The Taj Mahal area, Mughal architecture and historic sites." },
+  { name: "Varanasi", region: "Uttar Pradesh", note: "River & heritage", budget: "₹3,100–₹5,890", low: 3100, category: "Spiritual", emoji: "🛕", lat: 25.3176, lon: 82.9739, highlights: "Ganga ghats, historic lanes and cultural experiences." },
+  { name: "Rishikesh", region: "Uttarakhand", note: "River & adventure", budget: "₹4,650–₹8,835", low: 4650, category: "Adventure", emoji: "⛰️", lat: 30.0869, lon: 78.2676, highlights: "River scenery and adventure activities; long-distance travel can raise costs." },
+  { name: "Shimla", region: "Himachal Pradesh", note: "Mountain views", budget: "₹4,150–₹7,885", low: 4150, category: "Nature", emoji: "🌿", lat: 31.1048, lon: 77.1734, highlights: "Mountain scenery, walking streets and colonial-era architecture." },
+  { name: "Manali", region: "Himachal Pradesh", note: "Himalayan escape", budget: "₹4,750–₹9,025", low: 4750, category: "Adventure", emoji: "⛰️", lat: 32.2432, lon: 77.1892, highlights: "Mountain views, outdoor activities and valley scenery." },
+  { name: "Srinagar", region: "Jammu & Kashmir", note: "Lakes & mountains", budget: "₹4,850–₹9,215", low: 4850, category: "Nature", emoji: "🌿", lat: 34.0837, lon: 74.7973, highlights: "Lake views, gardens and Himalayan landscapes." },
+  { name: "Kolkata", region: "West Bengal", note: "Culture & food", budget: "₹3,150–₹5,985", low: 3150, category: "Culture", emoji: "🏛️", lat: 22.5726, lon: 88.3639, highlights: "Museums, colonial-era landmarks, markets and Bengali food." },
+  { name: "Darjeeling", region: "West Bengal", note: "Tea & mountains", budget: "₹3,950–₹7,505", low: 3950, category: "Nature", emoji: "🌿", lat: 27.041, lon: 88.2663, highlights: "Tea gardens, mountain views and heritage rail experiences." },
+  { name: "Shillong", region: "Meghalaya", note: "Waterfalls & hills", budget: "₹3,800–₹7,220", low: 3800, category: "Nature", emoji: "🌿", lat: 25.5788, lon: 91.8933, highlights: "Green hills, waterfalls and scenic drives." },
+  { name: "Kaziranga", region: "Assam", note: "Wildlife & nature", budget: "₹4,700–₹8,930", low: 4700, category: "Adventure", emoji: "⛰️", lat: 26.5775, lon: 93.1711, highlights: "Wildlife and nature experiences; check seasonal access and permits." },
+  { name: "Puri", region: "Odisha", note: "Temple & beach", budget: "₹2,900–₹5,510", low: 2900, category: "Spiritual", emoji: "🛕", lat: 19.8135, lon: 85.8312, highlights: "Coastal scenery, temple heritage and local food." },
+  { name: "Bengaluru", region: "Karnataka", note: "City & gardens", budget: "₹4,050–₹7,695", low: 4050, category: "City", emoji: "🌆", lat: 12.9716, lon: 77.5946, highlights: "Gardens, museums, food streets and city attractions." },
+  { name: "Amritsar", region: "Punjab", note: "Heritage & food", budget: "₹3,150–₹5,985", low: 3150, category: "Spiritual", emoji: "🛕", lat: 31.634, lon: 74.8723, highlights: "Golden Temple, historic sites and Punjabi cuisine." },
+  { name: "Guwahati", region: "Assam", note: "Gateway to the Northeast", budget: "₹3,300–₹6,270", low: 3300, category: "Culture", emoji: "🏛️", lat: 26.1445, lon: 91.7362, highlights: "River views, temples and access to Northeast India." }
 ];
 const money = n => "₹" + Math.max(0, Number(n) || 0).toLocaleString("en-IN");
 function Field({ label, value, onChangeText, keyboardType = "default", placeholder }) {
@@ -74,13 +74,18 @@ export default function App() {
   const [expenses, setExpenses] = useState([]), [editingId, setEditingId] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [language, setLanguage] = useState("English");
+  const [groupName, setGroupName] = useState("Weekend getaway");
+  const [memberName, setMemberName] = useState("");
+  const [memberRole, setMemberRole] = useState("Traveller");
+  const [groupMembers, setGroupMembers] = useState([]);
 
   useEffect(() => {
-    AsyncStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1"]).then(rows => {
-      const trips = rows[0]?.[1], costs = rows[1]?.[1], savedLanguage = rows[2]?.[1];
+    AsyncStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1", "wanderwise.groupMembers.v1"]).then(rows => {
+      const trips = rows[0]?.[1], costs = rows[1]?.[1], savedLanguage = rows[2]?.[1], members = rows[3]?.[1];
       if (trips) setSaved(JSON.parse(trips));
       if (costs) setExpenses(JSON.parse(costs));
       if (savedLanguage && UI_TEXT[savedLanguage]) setLanguage(savedLanguage);
+      if (members) setGroupMembers(JSON.parse(members));
     }).catch(() => Alert.alert("Storage notice", "Saved data could not be loaded on this launch."));
   }, []);
   const total = useMemo(() => {
@@ -89,6 +94,10 @@ export default function App() {
   }, [days, people, travel, stay, food, extras]);
   const persistTrips = async next => { setSaved(next); try { await AsyncStorage.setItem(KEY, JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Trips could not be saved on this device."); } };
   const persistExpenses = async next => { setExpenses(next); try { await AsyncStorage.setItem("wanderwise.expenses.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Expenses could not be saved on this device."); } };
+  const persistGroupMembers = async next => { setGroupMembers(next); try { await AsyncStorage.setItem("wanderwise.groupMembers.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Group list could not be saved on this device."); } };
+  const addGroupMember = () => { const name=memberName.trim(); if(!name) return Alert.alert("Add a member","Enter a name first."); if(groupMembers.some(m=>m.name.toLowerCase()===name.toLowerCase())) return Alert.alert("Already added","This member is already in the group."); persistGroupMembers([...groupMembers,{id:String(Date.now()),name,role:memberRole}]); setMemberName(""); };
+  const exportLocalData = async () => { try { await Share.share({title:"WanderWise data export",message:JSON.stringify({app:"WanderWise",exportedAt:new Date().toISOString(),savedTrips:saved,expenses,groupName,groupMembers},null,2)}); } catch { Alert.alert("Export unavailable","Could not open the Android share sheet."); } };
+  const openMap = place => { if(!place?.lat || !place?.lon) return Alert.alert("Map unavailable","Coordinates are not available for this destination."); Linking.openURL("https://www.google.com/maps/search/?api=1&query="+place.lat+","+place.lon).catch(()=>Alert.alert("Could not open Maps","Please try again.")); };
   const saveTrip = () => {
     if (!destination.trim()) return Alert.alert("Add a destination", "Enter where you want to travel first.");
     const safeDays = Math.max(1, Math.min(30, Math.floor(Number(days) || 1)));
@@ -120,7 +129,7 @@ export default function App() {
   };
   const removeTrip = id => Alert.alert("Delete saved trip?", "This removes the trip from this device.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: () => persistTrips(saved.filter(x => x.id !== id)) }]);
   const t = key => (UI_TEXT[language] || UI_TEXT.English)[key] || key;
-  const nav = [["Dashboard",t("home")],["Explore",t("explore")],["Discover",t("discover")],["For You",t("forYou")],["Plan",t("plan")],["Stays",t("stays")],["Expenses",t("expenses")],["Analytics",t("analytics")],["Saved",t("saved")]];
+  const nav = [["Dashboard",t("home")],["Explore",t("explore")],["Discover",t("discover")],["For You",t("forYou")],["Plan",t("plan")],["Stays",t("stays")],["Expenses",t("expenses")],["Groups","♧ Groups"],["Analytics",t("analytics")],["Saved",t("saved")]];
   const tripSpend = saved.reduce((sum,t)=>sum+(Number(t.total)||0),0);
   const expenseSpend = expenses.reduce((sum,e)=>sum+(Number(e.amount)||0),0);
   const selected = destinations.find(d=>d.name===destination);
@@ -188,7 +197,7 @@ export default function App() {
           <Button title={editingId?"✓ Update trip":"♡ Save this trip"} onPress={saveTrip} primary/>
           {editingId&&<Button title="Cancel editing" onPress={()=>{setEditingId(null);setTab("Saved");}}/>}
         </View>
-        {selected&&<View style={styles.tipCard}><Text style={styles.tipTitle}>{selected.emoji} About {selected.name}</Text><Text style={styles.sectionCopy}>{selected.highlights}. Indicative destination budget: {selected.budget} per person. Estimates can vary by season.</Text></View>}
+        {selected&&<View style={styles.tipCard}><Text style={styles.tipTitle}>{selected.emoji} About {selected.name}</Text><Text style={styles.sectionCopy}>{selected.highlights}. Indicative destination budget: {selected.budget} per person. Estimates can vary by season.</Text><Button title="Open destination in Maps ↗" onPress={()=>openMap(selected)}/></View>}
       </>}
       {tab==="Stays" && <>
         <Heading eyebrow="REST EASY, SPEND WISELY" title="Stay planning" subtitle="Compare accommodation styles and add a realistic room budget to your trip. These are planning guides, not live listings or availability."/>
@@ -207,6 +216,13 @@ export default function App() {
         <Heading eyebrow="RECENT ACTIVITY" title="Your expenses"/>
         {!expenses.length?<Empty title="No expenses yet" text="Add your first cost above to start tracking spending."/>:expenses.map(e=><View key={e.id} style={styles.savedCard}><View style={{flex:1}}><Text style={styles.destinationName}>{e.name}</Text><Text style={styles.destinationNote}>{new Date(e.date).toLocaleDateString()}</Text></View><Text style={styles.destinationBudget}>{money(e.amount)}</Text><Pressable onPress={()=>persistExpenses(expenses.filter(x=>x.id!==e.id))} style={styles.removeButton}><Text style={{color:"#B42318",fontWeight:"800"}}>Delete</Text></Pressable></View>)}
       </>}
+      {tab==="Groups" && <>
+        <Heading eyebrow="PLAN TOGETHER" title="Group trip planner" subtitle="Keep a simple traveller list and assign planning roles. This first version is stored on this device; shared invitations and live collaboration are still being built."/>
+        <View style={styles.card}><Field label="Group / trip name" value={groupName} onChangeText={setGroupName} placeholder="Weekend getaway"/><Field label="Member name" value={memberName} onChangeText={setMemberName} placeholder="Enter a traveller name"/><Text style={styles.label}>PLANNING ROLE</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:10}}>{["Organizer","Planner","Traveller","Viewer"].map(role=><Pressable key={role} onPress={()=>setMemberRole(role)} style={[styles.chip,memberRole===role&&styles.chipActive]}><Text style={[styles.chipText,memberRole===role&&styles.chipTextActive]}>{role}</Text></Pressable>)}</View><Button title="＋ Add group member" primary onPress={addGroupMember}/></View>
+        <Heading eyebrow="TRAVEL CREW" title={groupName}/>
+        {!groupMembers.length?<Empty title="Your travel crew starts here" text="Add the people travelling with you and choose their planning roles."/>:groupMembers.map(member=><View key={member.id} style={styles.savedCard}><View style={{flex:1}}><Text style={styles.destinationName}>{member.name}</Text><Text style={styles.destinationNote}>{member.role}</Text></View><Pressable onPress={()=>persistGroupMembers(groupMembers.filter(m=>m.id!==member.id))} style={styles.removeButton}><Text style={{color:"#B42318",fontWeight:"800"}}>Remove</Text></Pressable></View>)}
+        <View style={styles.tipCard}><Text style={styles.tipTitle}>🔒 Privacy note</Text><Text style={styles.sectionCopy}>No contacts or location are accessed. Names and roles stay in local app storage until you export or clear the app data.</Text></View>
+      </>}
       {tab==="Analytics" && <>
         <Heading eyebrow="YOUR TRAVEL NUMBERS" title="Trip insights" subtitle="A local summary of saved trip estimates and expense entries on this device."/>
         <View style={styles.metrics}><Metric label="Saved trips" value={String(saved.length)} icon="🧳"/><Metric label="Estimated trip spend" value={money(tripSpend)} icon="🗺️"/><Metric label="Logged expenses" value={money(expenseSpend)} icon="🧾"/><Metric label="Average trip estimate" value={money(saved.length?tripSpend/saved.length:0)} icon="📊"/></View>
@@ -220,7 +236,7 @@ export default function App() {
       </>}
       <View style={styles.footer}><Text style={styles.footerBrand}>WanderWise</Text><Text style={styles.footerText}>Thoughtful travel for real-world budgets.</Text><Text style={styles.footerText}>A PDAP project · Built for memorable journeys</Text></View>
     </ScrollView>
-    {showSettings&&<View style={styles.modalBackdrop}><View style={styles.modal}><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);AsyncStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>WanderWise saves trips and expenses locally on this device. Estimates are indicative and are not live prices.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistTrips([])}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistExpenses([])}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></View></View>}
+    {showSettings&&<View style={styles.modalBackdrop}><View style={styles.modal}><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);AsyncStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>WanderWise saves trips and expenses locally on this device. Estimates are indicative and are not live prices.</Text><Button title="Export my data ↗" onPress={exportLocalData}/><Text style={styles.sectionCopy}>Export includes saved trips, expenses, and the local group roster.</Text><Text style={styles.sectionCopy}>Location access is not requested or collected by this version.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistTrips([])}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistExpenses([])}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></View></View>}
   </SafeAreaView>;
 }
 function Metric({label,value,icon}) { return <View style={styles.metric}><Text style={{fontSize:22}}>{icon}</Text><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text></View>; }
