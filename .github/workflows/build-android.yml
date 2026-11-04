@@ -44,11 +44,13 @@ jobs:
         run: npx expo-doctor
       - name: Generate native Android project
         run: npx expo prebuild --platform android --no-install
-      - name: Build debug APK
-        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - name: Bundle Android JavaScript
+        run: npx expo export --platform android --output-dir /tmp/wanderwise-export
+      - name: Build installable preview APK
+        run: cd android && chmod +x gradlew && ./gradlew assembleRelease
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: wanderwise-debug-apk
-          path: wanderwise-app/android/app/build/outputs/apk/debug/app-debug.apk
+          name: wanderwise-preview-apk
+          path: wanderwise-app/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
