@@ -19,7 +19,8 @@
     "expo-crypto": "~15.0.7",
     "expo-secure-store": "~15.0.7",
     "tweetnacl": "^1.0.3",
-    "tweetnacl-util": "^0.15.1"
+    "tweetnacl-util": "^0.15.1",
+    "react-native-webview": "13.15.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2"
