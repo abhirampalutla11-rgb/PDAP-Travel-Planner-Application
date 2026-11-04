@@ -94,6 +94,14 @@ export default function App() {
   const [hotelGuests, setHotelGuests] = useState("2");
   const [hotelCheckIn, setHotelCheckIn] = useState("");
   const [hotelCheckOut, setHotelCheckOut] = useState("");
+  const [surpriseBudget, setSurpriseBudget] = useState("10000");
+  const [surpriseMood, setSurpriseMood] = useState("Any");
+  const [surpriseResult, setSurpriseResult] = useState("");
+  const [assistantBudget, setAssistantBudget] = useState("10000");
+  const [assistantResult, setAssistantResult] = useState("");
+  const [miniDestination, setMiniDestination] = useState("");
+  const [miniDays, setMiniDays] = useState("2");
+  const [miniPlan, setMiniPlan] = useState([]);
 
   useEffect(() => {
     AsyncStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1", "wanderwise.groupMembers.v1"]).then(rows => {
@@ -165,6 +173,29 @@ export default function App() {
       if (error) throw error;
       return { ...trip, id: data.id, cloudId: data.id };
     } catch (error) { setSyncMessage("Saved locally. Cloud trip sync failed: " + (error?.message || "Unknown error")); return trip; }
+  };
+  const surpriseMe = () => {
+    const budget = Number(surpriseBudget), travellerCount = Math.max(1, Number(people) || 1);
+    if (!Number.isFinite(budget) || budget <= 0) return Alert.alert("Check your budget", "Enter a budget greater than zero.");
+    const perPerson = budget / travellerCount;
+    const matches = destinations.filter(place => (surpriseMood === "Any" || place.category === surpriseMood) && place.low <= perPerson).sort((a,b)=>a.low-b.low);
+    if (!matches.length) { setSurpriseResult("No close matches yet. Increase the budget or choose Any travel style."); return; }
+    const pick = matches[Math.floor(Math.random() * matches.length)];
+    setSurpriseResult(pick.name + " · " + pick.region + " · estimated from " + money(pick.low) + " per person.");
+    setDestination(pick.name);
+  };
+  const buildBudgetSplit = () => {
+    const amount = Number(assistantBudget);
+    if (!Number.isFinite(amount) || amount <= 0) return Alert.alert("Check your budget", "Enter a budget greater than zero.");
+    const p = Math.max(1, Math.min(20, Number(people) || 1)), d = Math.max(1, Math.min(30, Number(days) || 1));
+    setAssistantResult("For " + p + " traveller(s) over " + d + " day(s): travel " + money(amount*.25) + " · stay " + money(amount*.25) + " · food " + money(amount*.30) + " · activities and buffer " + money(amount*.20) + ". Adjust these starter shares to match real quotes.");
+  };
+  const buildMiniPlan = () => {
+    const place = miniDestination.trim() || destination.trim();
+    if (!place) return Alert.alert("Add a destination", "Enter a destination for your mini itinerary.");
+    const count = Math.max(1, Math.min(7, Math.floor(Number(miniDays) || 1)));
+    setMiniPlan(Array.from({length:count},(_,i)=>({day:i+1,plan:i===0?"Arrival, breakfast and one main local attraction.":i===count-1?"Explore a nearby highlight, enjoy local food and prepare for return.":"Morning sightseeing, relaxed lunch and one nearby experience."})));
+    setDestination(place);
   };
   const signOut = async () => { const { error } = await supabase.auth.signOut(); if (error) Alert.alert("Sign out failed", error.message); };
   const clearTrips = async () => {
@@ -257,6 +288,26 @@ export default function App() {
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       {tab==="Dashboard" && <>
         <View style={styles.hero}><Text style={styles.eyebrow}>YOUR TRAVEL CONSOLE</Text><Text style={styles.heroTitle}>Small budget.{ "\n" }Big memories.</Text><Text style={styles.heroCopy}>Make a plan, keep an eye on costs, and find your next getaway without losing sight of your budget.</Text><Button title="＋ Start planning" primary onPress={()=>setTab("Plan")}/></View>
+        <Heading eyebrow="SMART TRAVEL TOOLS" title="A little help before you go" subtitle="Free planning helpers inspired by the WanderWise website."/>
+        <View style={styles.card}>
+          <Text style={styles.formHeading}>🎲 Surprise me with a destination</Text>
+          <Field label="Total group budget (₹)" value={surpriseBudget} onChangeText={setSurpriseBudget} keyboardType="number-pad"/>
+          <Text style={styles.label}>TRAVEL STYLE</Text>
+          <View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:8}}>{["Any","Nature","Beach","Culture","Adventure","Spiritual","City"].map(m=><Pressable key={m} onPress={()=>setSurpriseMood(m)} style={[styles.chip,surpriseMood===m&&styles.chipActive]}><Text style={[styles.chipText,surpriseMood===m&&styles.chipTextActive]}>{m}</Text></Pressable>)}</View>
+          <Button title="Find my surprise ✨" primary onPress={surpriseMe}/>
+          {!!surpriseResult&&<Text style={styles.sectionCopy}>{surpriseResult}</Text>}
+          <View style={{height:1,backgroundColor:LINE,marginVertical:14}}/>
+          <Text style={styles.formHeading}>💸 Quick budget split</Text>
+          <Field label="Total budget (₹)" value={assistantBudget} onChangeText={setAssistantBudget} keyboardType="number-pad"/>
+          <Button title="Build my budget split" onPress={buildBudgetSplit}/>
+          {!!assistantResult&&<Text style={styles.sectionCopy}>{assistantResult}</Text>}
+          <View style={{height:1,backgroundColor:LINE,marginVertical:14}}/>
+          <Text style={styles.formHeading}>🗓️ Mini itinerary builder</Text>
+          <Field label="Destination" value={miniDestination} onChangeText={setMiniDestination} placeholder="e.g. Araku Valley"/>
+          <Field label="Number of days (1–7)" value={miniDays} onChangeText={setMiniDays} keyboardType="number-pad"/>
+          <Button title="Draft a day-wise plan" onPress={buildMiniPlan}/>
+          {miniPlan.map(item=><Text key={item.day} style={styles.sectionCopy}>Day {item.day}: {item.plan}</Text>)}
+        </View>
         <View style={styles.metrics}><Metric label="Saved trips" value={String(saved.length)} icon="🧳"/><Metric label="Planned travellers" value={String(saved.reduce((s,t)=>s+(Number(t.people)||0),0))} icon="👥"/><Metric label="Trip estimates" value={money(tripSpend)} icon="🗺️"/><Metric label="Logged expenses" value={money(expenseSpend)} icon="🧾"/></View>
         <Heading eyebrow="YOUR NEXT ADVENTURE" title="Pick up where you left off" subtitle="Quick access to the main tools."/>
         <View style={styles.quickGrid}>{[["Explore","🌍","Browse destinations"],["Discover","✨","Filter trip ideas"],["Stays","🏨","Compare stay options"],["Expenses","🧾","Track spending"]].map(([k,icon,desc])=><Pressable key={k} style={styles.quickCard} onPress={()=>setTab(k)}><Text style={{fontSize:26}}>{icon}</Text><Text style={styles.destinationName}>{k}</Text><Text style={styles.destinationNote}>{desc}</Text></Pressable>)}</View>
