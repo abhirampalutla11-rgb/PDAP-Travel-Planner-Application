@@ -8,6 +8,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const GREEN = "#176B55", MINT = "#DFF4E9", ORANGE = "#F1A35B";
 const INK = "#172B3A", MUTED = "#60717D", LINE = "#E4EAE6";
 const KEY = "wanderwise.savedTrips.v1";
+const UI_TEXT = {
+  English: { home:"⌂ Home", explore:"⌖ Explore", discover:"✦ Discover", forYou:"✧ For You", plan:"✎ Plan trip", stays:"⌂ Stays", expenses:"₹ Expenses", analytics:"▥ Insights", saved:"♡ Saved", tagline:"Small budget. Big memories.", settings:"Settings", language:"App language" },
+  Telugu: { home:"⌂ హోమ్", explore:"⌖ అన్వేషించు", discover:"✦ కనుగొను", forYou:"✧ మీ కోసం", plan:"✎ ప్రయాణ ప్రణాళిక", stays:"⌂ వసతి", expenses:"₹ ఖర్చులు", analytics:"▥ విశ్లేషణ", saved:"♡ సేవ్ చేసినవి", tagline:"చిన్న బడ్జెట్. పెద్ద జ్ఞాపకాలు.", settings:"సెట్టింగ్స్", language:"యాప్ భాష" },
+  Hindi: { home:"⌂ होम", explore:"⌖ खोजें", discover:"✦ नई जगहें", forYou:"✧ आपके लिए", plan:"✎ यात्रा योजना", stays:"⌂ ठहरना", expenses:"₹ खर्चे", analytics:"▥ विश्लेषण", saved:"♡ सहेजे गए", tagline:"छोटा बजट। बड़ी यादें।", settings:"सेटिंग्स", language:"ऐप की भाषा" },
+  Tamil: { home:"⌂ முகப்பு", explore:"⌖ ஆராய்க", discover:"✦ கண்டறி", forYou:"✧ உங்களுக்காக", plan:"✎ பயணத் திட்டம்", stays:"⌂ தங்குமிடம்", expenses:"₹ செலவுகள்", analytics:"▥ புள்ளிவிவரங்கள்", saved:"♡ சேமித்தவை", tagline:"சிறிய பட்ஜெட். பெரிய நினைவுகள்.", settings:"அமைப்புகள்", language:"பயன்பாட்டு மொழி" }
+};
+
 const destinations = [
   { name: "Vijayawada & Bhavani Island", region: "Andhra Pradesh", note: "River views", budget: "₹2,350–₹4,465", low: 2350, category: "Nature", emoji: "🌿", highlights: "Krishna River scenery, island activities and city food." },
   { name: "Amaravati", region: "Andhra Pradesh", note: "Heritage", budget: "₹2,100–₹3,990", low: 2100, category: "Culture", emoji: "🏛️", highlights: "Buddhist heritage and a relaxed cultural day out." },
@@ -69,14 +76,15 @@ export default function App() {
   const [language, setLanguage] = useState("English");
 
   useEffect(() => {
-    AsyncStorage.multiGet([KEY, "wanderwise.expenses.v1"]).then(rows => {
-      const trips = rows[0]?.[1], costs = rows[1]?.[1];
+    AsyncStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1"]).then(rows => {
+      const trips = rows[0]?.[1], costs = rows[1]?.[1], savedLanguage = rows[2]?.[1];
       if (trips) setSaved(JSON.parse(trips));
       if (costs) setExpenses(JSON.parse(costs));
+      if (savedLanguage && UI_TEXT[savedLanguage]) setLanguage(savedLanguage);
     }).catch(() => Alert.alert("Storage notice", "Saved data could not be loaded on this launch."));
   }, []);
   const total = useMemo(() => {
-    const d = Math.max(1, Number(days) || 1), p = Math.max(1, Number(people) || 1);
+    const d = Math.max(1, Math.min(30, Math.floor(Number(days) || 1))), p = Math.max(1, Math.min(20, Math.floor(Number(people) || 1)));
     return (Number(travel) || 0) * p + (Number(stay) || 0) * Math.max(0, d - 1) + (Number(food) || 0) * d * p + (Number(extras) || 0);
   }, [days, people, travel, stay, food, extras]);
   const persistTrips = async next => { setSaved(next); try { await AsyncStorage.setItem(KEY, JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Trips could not be saved on this device."); } };
@@ -111,7 +119,8 @@ export default function App() {
     setExpenseName(""); setExpenseAmount("");
   };
   const removeTrip = id => Alert.alert("Delete saved trip?", "This removes the trip from this device.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: () => persistTrips(saved.filter(x => x.id !== id)) }]);
-  const nav = [["Dashboard","⌂ Home"],["Explore","⌖ Explore"],["Discover","✦ Discover"],["For You","✧ For You"],["Plan","✎ Plan trip"],["Stays","⌂ Stays"],["Expenses","₹ Expenses"],["Analytics","▥ Insights"],["Saved","♡ Saved"]];
+  const t = key => (UI_TEXT[language] || UI_TEXT.English)[key] || key;
+  const nav = [["Dashboard",t("home")],["Explore",t("explore")],["Discover",t("discover")],["For You",t("forYou")],["Plan",t("plan")],["Stays",t("stays")],["Expenses",t("expenses")],["Analytics",t("analytics")],["Saved",t("saved")]];
   const tripSpend = saved.reduce((sum,t)=>sum+(Number(t.total)||0),0);
   const expenseSpend = expenses.reduce((sum,e)=>sum+(Number(e.amount)||0),0);
   const selected = destinations.find(d=>d.name===destination);
@@ -125,7 +134,7 @@ export default function App() {
     <StatusBar barStyle="light-content" backgroundColor={GREEN}/>
     <View style={styles.header}>
       <View style={styles.brandIcon}><Text style={{fontSize:23}}>✈</Text></View>
-      <View style={{flex:1}}><Text style={styles.brand}>Wander<Text style={styles.brandAccent}>Wise</Text></Text><Text style={styles.tagline}>Small budget. Big memories.</Text></View>
+      <View style={{flex:1}}><Text style={styles.brand}>Wander<Text style={styles.brandAccent}>Wise</Text></Text><Text style={styles.tagline}>{t("tagline")}</Text></View>
       <Pressable accessibilityLabel="Open settings" onPress={()=>setShowSettings(true)} style={styles.settingsButton}><Text style={{fontSize:21}}>⚙</Text></Pressable>
     </View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.navScroll} contentContainerStyle={styles.tabs}>
@@ -211,7 +220,7 @@ export default function App() {
       </>}
       <View style={styles.footer}><Text style={styles.footerBrand}>WanderWise</Text><Text style={styles.footerText}>Thoughtful travel for real-world budgets.</Text><Text style={styles.footerText}>A PDAP project · Built for memorable journeys</Text></View>
     </ScrollView>
-    {showSettings&&<View style={styles.modalBackdrop}><View style={styles.modal}><Text style={styles.sectionTitle}>Settings</Text><Text style={styles.sectionCopy}>WanderWise saves trips and expenses locally on this device. Estimates are indicative and are not live prices.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistTrips([])}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistExpenses([])}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></View></View>}
+    {showSettings&&<View style={styles.modalBackdrop}><View style={styles.modal}><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);AsyncStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>WanderWise saves trips and expenses locally on this device. Estimates are indicative and are not live prices.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistTrips([])}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistExpenses([])}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></View></View>}
   </SafeAreaView>;
 }
 function Metric({label,value,icon}) { return <View style={styles.metric}><Text style={{fontSize:22}}>{icon}</Text><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text></View>; }
