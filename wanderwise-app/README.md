@@ -4,11 +4,11 @@ Native Android application for the PDAP Travel Planner, built with React Native 
 
 ## Current app modules
 
-- Dashboard
+- Dashboard with a destination surprise picker, budget split assistant, and mini itinerary builder
 - Explore and Discover with the same 34 destination records used by the current WanderWise website
 - For You budget matches
 - Plan Trip with editable costs, a budget snapshot, remaining/over-budget calculation, and a day-by-day starter itinerary
-- Stays
+- Stay budget guides plus external hotel, review, and price searches through Google Maps, Google Travel, and Booking.com
 - Expenses
 - Analytics / trip insights
 - Saved Trips with edit and delete
@@ -40,7 +40,7 @@ The public GitHub Actions workflow can build an APK without an Expo cloud token.
 - Real shared group-trip collaboration, invitations, and synced role permissions.
 - Native scheduled notifications and live weather, delay, or price-drop feeds. These need device notification integration and suitable data providers; no paid API is included.
 - Full translation of every screen (the language selector and primary navigation are localized in this pass).
-- Live in-app maps, route navigation, and live accommodation availability.
+- Embedded in-app maps, turn-by-turn route navigation, and live availability feeds. The app hands off map and hotel searches to external services.
 - Full dark-mode theme.
 
 No paid APIs, subscriptions, or paid SDKs are required for the current app source. The APK build can be run locally or through the public-repository workflow.
