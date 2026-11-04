@@ -133,7 +133,7 @@ export default function App() {
       const localExpenses = JSON.parse((await AsyncStorage.getItem("wanderwise.expenses.v1")) || "[]");
       const isUuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
       for (const trip of localTrips.filter(item => !item.cloudId && !isUuid(item.id))) {
-        const start = /^\\d{4}-\\d{2}-\\d{2}$/.test(trip.date || "") ? trip.date : new Date().toISOString().slice(0, 10);
+        const start = /^\d{4}-\d{2}-\d{2}$/.test(trip.date || "") ? trip.date : new Date().toISOString().slice(0, 10);
         const endDate = new Date(start + "T00:00:00"); endDate.setDate(endDate.getDate() + Math.max(0, Number(trip.days || 1) - 1));
         const end = endDate.getFullYear() + "-" + String(endDate.getMonth()+1).padStart(2,"0") + "-" + String(endDate.getDate()).padStart(2,"0");
         const costs = { transport: (Number(trip.travel)||0)*(Number(trip.people)||1), lodging: (Number(trip.stay)||0)*Math.max(0,Number(trip.days||1)-1), food: (Number(trip.food)||0)*(Number(trip.people)||1)*(Number(trip.days)||1), activities: Number(trip.extras)||0, total: Number(trip.total)||0 };
@@ -188,7 +188,7 @@ export default function App() {
   const saveTripToCloud = async trip => {
     if (!session?.user) return trip;
     try {
-      const start = /^\\d{4}-\\d{2}-\\d{2}$/.test(trip.date || "") ? trip.date : new Date().toISOString().slice(0, 10);
+      const start = /^\d{4}-\d{2}-\d{2}$/.test(trip.date || "") ? trip.date : new Date().toISOString().slice(0, 10);
       const endDate = new Date(start + "T00:00:00"); endDate.setDate(endDate.getDate() + Math.max(0, trip.days - 1));
       const end = endDate.getFullYear() + "-" + String(endDate.getMonth()+1).padStart(2,"0") + "-" + String(endDate.getDate()).padStart(2,"0");
       const costs = { transport: trip.travel * trip.people, lodging: trip.stay * Math.max(0, trip.days - 1), food: trip.food * trip.people * trip.days, activities: trip.extras, total: trip.total };
