@@ -28,13 +28,13 @@ Trip and expense data are encrypted on-device before local storage and can sync 
 2. Open a terminal in this folder and run `npm install`.
 3. Run `npx expo start` and use Expo Go on an Android phone to preview the app.
 4. For a native Android build, run `npx expo prebuild --platform android`.
-5. Open the generated `android` folder in Android Studio, allow Gradle sync, then build an APK using **Build > Build Bundle(s) / APK(s) > Build APK(s)**. The debug APK is under `android/app/build/outputs/apk/debug/`.
+5. Open the generated `android` folder in Android Studio, allow Gradle sync, then build an APK using **Build > Build Bundle(s) / APK(s) > Build APK(s)**. The preview APK is under `android/app/build/outputs/apk/release/`.
 
 For a release APK from a local terminal, run `cd android && ./gradlew assembleRelease` (Windows: `cd android && gradlew.bat assembleRelease`). Android signing must be configured before distributing a production release.
 
 ## Free CI APK build
 
-The public GitHub Actions workflow can build an APK without an Expo cloud token. Run it from the repository's **Actions** tab using **Build WanderWise Android APK**. The generated APK is uploaded as a workflow artifact.
+The public GitHub Actions workflow can build an APK without an Expo cloud token. Run it from the repository's **Actions** tab using **Build WanderWise Android APK**. The generated standalone preview APK is uploaded as a workflow artifact. It is debug-signed for testing, not a production-store release.
 
 ## Not yet implemented / next development stages
 
