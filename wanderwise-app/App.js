@@ -17,7 +17,6 @@ const INK = "#172B3A", MUTED = "#60717D", LINE = "#E4EAE6";
 const KEY = "wanderwise.savedTrips.v1";
 const SUPABASE_URL = "https://hmjtzyakidwtkzhhbgzd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3dsWrDTOtIz6eWi_ndF4Qw_GJIUY8o6";
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { storage: encryptedStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } });
 const STORAGE_KEY = "wanderwise.device-encryption-key.v1";
 const getDeviceEncryptionKey = async () => {
   let encoded = await SecureStore.getItemAsync(STORAGE_KEY);
@@ -53,6 +52,7 @@ const encryptedStorage = {
   async multiGet(keys) { return Promise.all(keys.map(async key => [key, await this.getItem(key)])); },
   async multiSet(items) { await Promise.all(items.map(([key, value]) => this.setItem(key, value))); }
 };
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { storage: encryptedStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } });
 let cloudSyncInProgress = false;
 const UI_TEXT = {
   English: { home:"⌂ Home", explore:"⌖ Explore", discover:"✦ Discover", forYou:"✧ For You", plan:"✎ Plan trip", stays:"⌂ Stays", expenses:"₹ Expenses", analytics:"▥ Insights", saved:"♡ Saved", tagline:"Small budget. Big memories.", settings:"Settings", language:"App language" },
@@ -513,7 +513,7 @@ export default function App() {
         {!session?.user && <><Field label="Email" value={authEmail} onChangeText={setAuthEmail} placeholder="you@example.com"/><Field label="Password" value={authPassword} onChangeText={setAuthPassword} placeholder="At least 6 characters"/><View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}><Button title={authBusy ? "Please wait…" : authMode==="signup" ? "Create account" : "Sign in"} primary onPress={handleAuth}/><Button title={authMode==="signup" ? "I have an account" : "Create account"} onPress={()=>setAuthMode(authMode==="signup"?"signin":"signup")}/></View></>}
         {!!session?.user && <><Button title="Sync now ↻" onPress={()=>syncCloudData(session)}/><Button title="Sign out" danger onPress={signOut}/></>}
         <Text style={styles.sectionCopy}>{syncMessage}</Text>
-        <Text style={styles.sectionCopy}>Your local copy remains available. Account sync uses the same Supabase project as the WanderWise website.</Text>
+        <Text style={styles.sectionCopy}>Your local copy and account session are encrypted on this device with a device-held key. Account sync uses encrypted HTTPS communication and the same Supabase project as the WanderWise website.</Text>
         <Text style={styles.sectionCopy}>Estimates are indicative and are not live prices.</Text><Button title="Export my data ↗" onPress={exportLocalData}/><Text style={styles.sectionCopy}>Export includes saved trips, expenses, and the local group roster.</Text><Text style={styles.sectionCopy}>Location access is not requested or collected by this version.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearTrips}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearExpenses}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></ScrollView></View>}
   </SafeAreaView>;
 }
