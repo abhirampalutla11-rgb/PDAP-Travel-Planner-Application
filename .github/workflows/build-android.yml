@@ -49,6 +49,8 @@ jobs:
           yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --install "ndk;27.1.12297006"
       - name: Install dependencies
         run: npm install
+      - name: Generate WanderWise brand assets
+        run: node scripts/generate-assets.cjs
       - name: Check Expo project
         run: npx expo-doctor
       - name: Generate native Android project
