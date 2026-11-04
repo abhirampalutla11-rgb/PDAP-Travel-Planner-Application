@@ -15,9 +15,10 @@ Native Android application for the PDAP Travel Planner, built with React Native 
 - Group trip roster with organizer, planner, traveller, and viewer roles (local draft only)
 - External Google Maps hand-off for destination locations (no API key required)
 - Settings with English (default), Telugu, Hindi, and Tamil navigation preferences
+- Email/password account sign-in and Supabase cloud sync for trips and expenses, using the same backend project as the website
 - Local data export through the Android share sheet and local data deletion controls
 
-Trip and expense data are currently stored locally on the Android device with AsyncStorage. The app clearly labels destination and cost values as estimates, not live prices.
+Trip and expense data are stored locally with AsyncStorage and can sync to the existing WanderWise Supabase account after sign-in. Local storage remains available when offline. The app clearly labels destination and cost values as estimates, not live prices.
 
 ## Free local development
 
@@ -35,7 +36,7 @@ The public GitHub Actions workflow can build an APK without an Expo cloud token.
 
 ## Not yet implemented / next development stages
 
-- Supabase authentication and cross-device sync (the website has a Supabase setup; the native app is not connected yet).
+- Google sign-in and password-recovery deep-link flow (email/password sign-in and account creation are implemented).
 - Real shared group-trip collaboration, invitations, and synced role permissions.
 - Native scheduled notifications and live weather, delay, or price-drop feeds. These need device notification integration and suitable data providers; no paid API is included.
 - Full translation of every screen (the language selector and primary navigation are localized in this pass).
