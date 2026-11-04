@@ -89,6 +89,11 @@ export default function App() {
   const [authMode, setAuthMode] = useState("signin");
   const [authBusy, setAuthBusy] = useState(false);
   const [syncMessage, setSyncMessage] = useState("Sign in to sync trips and expenses across devices.");
+  const [hotelDestination, setHotelDestination] = useState("");
+  const [hotelType, setHotelType] = useState("hotels");
+  const [hotelGuests, setHotelGuests] = useState("2");
+  const [hotelCheckIn, setHotelCheckIn] = useState("");
+  const [hotelCheckOut, setHotelCheckOut] = useState("");
 
   useEffect(() => {
     AsyncStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1", "wanderwise.groupMembers.v1"]).then(rows => {
@@ -175,7 +180,21 @@ export default function App() {
   const persistGroupMembers = async next => { setGroupMembers(next); try { await AsyncStorage.setItem("wanderwise.groupMembers.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Group list could not be saved on this device."); } };
   const addGroupMember = () => { const name=memberName.trim(); if(!name) return Alert.alert("Add a member","Enter a name first."); if(groupMembers.some(m=>m.name.toLowerCase()===name.toLowerCase())) return Alert.alert("Already added","This member is already in the group."); persistGroupMembers([...groupMembers,{id:String(Date.now()),name,role:memberRole}]); setMemberName(""); };
   const exportLocalData = async () => { try { await Share.share({title:"WanderWise data export",message:JSON.stringify({app:"WanderWise",exportedAt:new Date().toISOString(),savedTrips:saved,expenses,groupName,groupMembers},null,2)}); } catch { Alert.alert("Export unavailable","Could not open the Android share sheet."); } };
-  const openMap = place => { if(!place?.lat || !place?.lon) return Alert.alert("Map unavailable","Coordinates are not available for this destination."); Linking.openURL("https://www.google.com/maps/search/?api=1&query="+place.lat+","+place.lon).catch(()=>Alert.alert("Could not open Maps","Please try again.")); };
+  const openMap = place => {
+    const query = place?.lat && place?.lon ? place.lat + "," + place.lon : encodeURIComponent(place?.name || destination);
+    Linking.openURL("https://www.google.com/maps/search/?api=1&query=" + query).catch(()=>Alert.alert("Could not open Maps","Please try again."));
+  };
+  const searchHotels = provider => {
+    const place = (hotelDestination || destination).trim();
+    if (!place) return Alert.alert("Add a destination", "Enter a city or place to search for stays.");
+    const details = hotelType + " near " + place + (hotelCheckIn ? " check-in " + hotelCheckIn : "") + (hotelCheckOut ? " check-out " + hotelCheckOut : "") + " for " + Math.max(1, Number(hotelGuests) || 1) + " guests";
+    const url = provider === "maps"
+      ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(details)
+      : provider === "booking"
+        ? "https://www.booking.com/searchresults.html?ss=" + encodeURIComponent(place + " " + hotelType) + (hotelCheckIn ? "&checkin=" + encodeURIComponent(hotelCheckIn) : "") + (hotelCheckOut ? "&checkout=" + encodeURIComponent(hotelCheckOut) : "") + "&group_adults=" + encodeURIComponent(String(Math.max(1, Number(hotelGuests) || 1)))
+        : "https://www.google.com/travel/hotels?q=" + encodeURIComponent(details);
+    Linking.openURL(url).catch(()=>Alert.alert("Could not open search", "Please try again."));
+  };
   const saveTrip = () => {
     if (!destination.trim()) return Alert.alert("Add a destination", "Enter where you want to travel first.");
     const safeDays = Math.max(1, Math.min(30, Math.floor(Number(days) || 1)));
@@ -287,6 +306,17 @@ export default function App() {
       </>}
       {tab==="Stays" && <>
         <Heading eyebrow="REST EASY, SPEND WISELY" title="Stay planning" subtitle="Compare accommodation styles and add a realistic room budget to your trip. These are planning guides, not live listings or availability."/>
+        <View style={styles.card}>
+          <Text style={styles.formHeading}>Find real hotel listings</Text>
+          <Text style={styles.sectionCopy}>Search current listings, reviews and available rates through external services. WanderWise does not book rooms or guarantee availability.</Text>
+          <Field label="Destination or tour spot" value={hotelDestination} onChangeText={setHotelDestination} placeholder={destination || "e.g. Araku Valley"}/>
+          <Field label="Stay type" value={hotelType} onChangeText={setHotelType} placeholder="hotels, resorts, homestays"/>
+          <View style={styles.twoFields}><View style={{flex:1}}><Field label="Guests" value={hotelGuests} onChangeText={setHotelGuests} keyboardType="number-pad"/></View><View style={{flex:1}}><Field label="Check-in (optional)" value={hotelCheckIn} onChangeText={setHotelCheckIn} placeholder="YYYY-MM-DD"/></View></View>
+          <Field label="Check-out (optional)" value={hotelCheckOut} onChangeText={setHotelCheckOut} placeholder="YYYY-MM-DD"/>
+          <Button title="Hotel listings & reviews ↗" onPress={()=>searchHotels("maps")} primary/>
+          <Button title="Compare prices on Google Travel ↗" onPress={()=>searchHotels("google")}/>
+          <Button title="More booking options ↗" onPress={()=>searchHotels("booking")}/>
+        </View>
         {[
           ["🛏️","Hostel / dorm","Best for solo travellers and groups sharing space","₹400–₹900 / person / night",400],
           ["🏡","Budget guesthouse","Simple private rooms, often suited to couples or families","₹800–₹1,800 / room / night",800],
