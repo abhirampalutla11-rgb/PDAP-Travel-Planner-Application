@@ -14,6 +14,9 @@
     },
     "splash": {
       "backgroundColor": "#176B55"
-    }
+    },
+    "plugins": [
+      "expo-notifications"
+    ]
   }
 }
