@@ -461,6 +461,11 @@ body.dark-mode .actions button:not(.primary),body.dark-mode .formActions button:
 @media(max-width:700px){.auth-tools{flex-wrap:wrap;justify-content:flex-end}.auth-status{max-width:140px}#profileOpen{font-size:.8rem;padding:7px}}
 
 </style>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#153e50">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body><header class="topbar"><a class="brand" href="#dashboard" aria-label="WanderWise home"><svg class="brandMark" viewBox="0 0 64 64" role="img" aria-label="WanderWise logo"><defs><linearGradient id="wwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#176baf"/><stop offset="1" stop-color="#19b7a5"/></linearGradient></defs><path d="M32 3C17 3 7 14 7 28c0 18 25 33 25 33s25-15 25-33C57 14 47 3 32 3Z" fill="url(#wwg)"/><circle cx="32" cy="27" r="17" fill="#eafafa"/><circle cx="41" cy="18" r="4" fill="#f1a35b"/><path d="M15 31 24 22l7 7 7-9 13 12v8H15Z" fill="#176baf"/><path d="M15 36c8-5 14 4 22 0s10-2 14 0v5H15Z" fill="#19b7a5"/><path d="M3 46c12 7 35 2 47-11" fill="none" stroke="#19b7a5" stroke-width="4" stroke-linecap="round"/><path d="m48 30 8 1-4 7" fill="none" stroke="#19b7a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="brandName"><b>Wander</b><strong>Wise</strong><small>Plan Smarter · Travel Better</small></span></a>
 <style>
@@ -977,4 +982,12 @@ renderSaved();renderExpenses();renderAnalytics();renderHotelHistory();
 <button type="button" data-dock="discover-view"><span>✨</span>Explore</button>
 <button type="button" data-dock="for-you"><span>🎯</span>For You</button>
 <button type="button" data-dock="saved-view"><span>❤️</span>Saved</button>
-</nav></body></html>
+</nav>  <script>
+    if ("serviceWorker" in navigator && location.protocol === "https:") {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js")
+          .catch(error => console.warn("WanderWise offline support could not start:", error));
+      });
+    }
+  </script>
+</body></html>
