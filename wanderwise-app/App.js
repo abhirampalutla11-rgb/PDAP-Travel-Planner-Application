@@ -3,11 +3,16 @@ import {
   SafeAreaView, ScrollView, View, Text, TextInput, Pressable,
   StyleSheet, StatusBar, Alert, Linking, Share
 } from "react-native";
+import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createClient } from "@supabase/supabase-js";
 
 const GREEN = "#176B55", MINT = "#DFF4E9", ORANGE = "#F1A35B";
 const INK = "#172B3A", MUTED = "#60717D", LINE = "#E4EAE6";
 const KEY = "wanderwise.savedTrips.v1";
+const SUPABASE_URL = "https://hmjtzyakidwtkzhhbgzd.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3dsWrDTOtIz6eWi_ndF4Qw_GJIUY8o6";
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } });
 const UI_TEXT = {
   English: { home:"⌂ Home", explore:"⌖ Explore", discover:"✦ Discover", forYou:"✧ For You", plan:"✎ Plan trip", stays:"⌂ Stays", expenses:"₹ Expenses", analytics:"▥ Insights", saved:"♡ Saved", tagline:"Small budget. Big memories.", settings:"Settings", language:"App language" },
   Telugu: { home:"⌂ హోమ్", explore:"⌖ అన్వేషించు", discover:"✦ కనుగొను", forYou:"✧ మీ కోసం", plan:"✎ ప్రయాణ ప్రణాళిక", stays:"⌂ వసతి", expenses:"₹ ఖర్చులు", analytics:"▥ విశ్లేషణ", saved:"♡ సేవ్ చేసినవి", tagline:"చిన్న బడ్జెట్. పెద్ద జ్ఞాపకాలు.", settings:"సెట్టింగ్స్", language:"యాప్ భాష" },
@@ -78,6 +83,12 @@ export default function App() {
   const [memberName, setMemberName] = useState("");
   const [memberRole, setMemberRole] = useState("Traveller");
   const [groupMembers, setGroupMembers] = useState([]);
+  const [session, setSession] = useState(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authMode, setAuthMode] = useState("signin");
+  const [authBusy, setAuthBusy] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("Sign in to sync trips and expenses across devices.");
 
   useEffect(() => {
     AsyncStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1", "wanderwise.groupMembers.v1"]).then(rows => {
@@ -87,11 +98,69 @@ export default function App() {
       if (savedLanguage && UI_TEXT[savedLanguage]) setLanguage(savedLanguage);
       if (members) setGroupMembers(JSON.parse(members));
     }).catch(() => Alert.alert("Storage notice", "Saved data could not be loaded on this launch."));
+    supabase.auth.getSession().then(({ data }) => { setSession(data.session || null); if (data.session) syncCloudData(data.session); });
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession || null);
+      if (nextSession) setTimeout(() => syncCloudData(nextSession), 0);
+      else setSyncMessage("Signed out. Your local copy remains on this device.");
+    });
+    return () => authListener.subscription.unsubscribe();
   }, []);
   const total = useMemo(() => {
     const d = Math.max(1, Math.min(30, Math.floor(Number(days) || 1))), p = Math.max(1, Math.min(20, Math.floor(Number(people) || 1)));
     return (Number(travel) || 0) * p + (Number(stay) || 0) * Math.max(0, d - 1) + (Number(food) || 0) * d * p + (Number(extras) || 0);
   }, [days, people, travel, stay, food, extras]);
+  const syncCloudData = async activeSession => {
+    if (!activeSession?.user) return;
+    setSyncMessage("Syncing your WanderWise account…");
+    try {
+      const [{ data: tripRows, error: tripError }, { data: expenseRows, error: expenseError }] = await Promise.all([
+        supabase.from("trips").select("*").order("created_at", { ascending: false }),
+        supabase.from("expenses").select("*").order("created_at", { ascending: false })
+      ]);
+      if (tripError) throw tripError;
+      if (expenseError) throw expenseError;
+      const cloudTrips = (tripRows || []).map(row => {
+        const c = row.costs || {}, days = Math.max(1, Math.round((new Date(row.end_date + "T00:00:00") - new Date(row.start_date + "T00:00:00")) / 86400000) + 1);
+        const peopleCount = Math.max(1, Number(row.travellers) || 1);
+        return { id: row.id, cloudId: row.id, title: row.destination, destination: row.destination, days, people: peopleCount, travel: Number(c.transport) || 0, stay: days > 1 ? (Number(c.lodging) || 0) / (days - 1) : 0, food: peopleCount * days ? (Number(c.food) || 0) / (peopleCount * days) : 0, extras: Number(c.activities) || 0, budgetLimit: Number(row.budget) || 0, total: Number(c.total) || (Number(c.transport)||0)+(Number(c.lodging)||0)+(Number(c.food)||0)+(Number(c.activities)||0), date: row.start_date || "", createdAt: row.created_at };
+      });
+      const cloudExpenses = (expenseRows || []).map(row => ({ id: row.id, name: row.description, amount: Number(row.amount) || 0, date: row.expense_date || row.created_at }));
+      setSaved(cloudTrips); setExpenses(cloudExpenses);
+      await AsyncStorage.multiSet([[KEY, JSON.stringify(cloudTrips)], ["wanderwise.expenses.v1", JSON.stringify(cloudExpenses)]]);
+      setSyncMessage("Synced " + cloudTrips.length + " trip(s) and " + cloudExpenses.length + " expense(s).");
+    } catch (error) {
+      setSyncMessage("Cloud sync unavailable: " + (error?.message || "Check your account and Supabase table policies.") + " Your local data is still available.");
+    }
+  };
+  const handleAuth = async () => {
+    if (!authEmail.trim() || !authPassword) return Alert.alert("Account details needed", "Enter your email and password.");
+    setAuthBusy(true);
+    try {
+      const result = authMode === "signup"
+        ? await supabase.auth.signUp({ email: authEmail.trim(), password: authPassword })
+        : await supabase.auth.signInWithPassword({ email: authEmail.trim(), password: authPassword });
+      if (result.error) throw result.error;
+      if (authMode === "signup" && !result.data.session) setSyncMessage("Account created. Check your email for the confirmation link, then sign in.");
+      else { setSession(result.data.session); if (result.data.session) await syncCloudData(result.data.session); }
+      setAuthPassword("");
+    } catch (error) { Alert.alert("Account error", error?.message || "Please try again."); }
+    finally { setAuthBusy(false); }
+  };
+  const saveTripToCloud = async trip => {
+    if (!session?.user) return trip;
+    try {
+      const start = /^\\d{4}-\\d{2}-\\d{2}$/.test(trip.date || "") ? trip.date : new Date().toISOString().slice(0, 10);
+      const endDate = new Date(start + "T00:00:00"); endDate.setDate(endDate.getDate() + Math.max(0, trip.days - 1));
+      const costs = { transport: trip.travel * trip.people, lodging: trip.stay * Math.max(0, trip.days - 1), food: trip.food * trip.people * trip.days, activities: trip.extras, total: trip.total };
+      const row = { user_id: session.user.id, destination: trip.destination, start_date: start, end_date: endDate.toISOString().slice(0, 10), travellers: trip.people, budget: trip.budgetLimit, interests: [], itinerary: [], costs };
+      if (trip.cloudId) row.id = trip.cloudId;
+      const { data, error } = await supabase.from("trips").upsert(row).select().single();
+      if (error) throw error;
+      return { ...trip, id: data.id, cloudId: data.id };
+    } catch (error) { setSyncMessage("Saved locally. Cloud trip sync failed: " + (error?.message || "Unknown error")); return trip; }
+  };
+  const signOut = async () => { const { error } = await supabase.auth.signOut(); if (error) Alert.alert("Sign out failed", error.message); };
   const persistTrips = async next => { setSaved(next); try { await AsyncStorage.setItem(KEY, JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Trips could not be saved on this device."); } };
   const persistExpenses = async next => { setExpenses(next); try { await AsyncStorage.setItem("wanderwise.expenses.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Expenses could not be saved on this device."); } };
   const persistGroupMembers = async next => { setGroupMembers(next); try { await AsyncStorage.setItem("wanderwise.groupMembers.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Group list could not be saved on this device."); } };
@@ -105,8 +174,10 @@ export default function App() {
     const costs = [travel, stay, food, extras, budgetLimit].map(Number);
     if (costs.some(value => !Number.isFinite(value) || value < 0)) return Alert.alert("Check your budget", "Enter valid amounts. Costs and budget cannot be negative.");
     const trip = { id: editingId || String(Date.now()), title: tripTitle.trim() || destination.trim(), destination: destination.trim(), days: safeDays, people: safePeople, travel: Number(travel)||0, stay: Number(stay)||0, food: Number(food)||0, extras: Number(extras)||0, budgetLimit: Number(budgetLimit)||0, total, date: tripDate, createdAt: new Date().toISOString() };
-    persistTrips(editingId ? saved.map(x => x.id === editingId ? trip : x) : [trip, ...saved]);
-    setEditingId(null); setTab("Saved"); Alert.alert(editingId ? "Trip updated" : "Trip saved ✨", "Your trip is stored on this device.");
+    const nextTrips = editingId ? saved.map(x => x.id === editingId ? trip : x) : [trip, ...saved];
+    persistTrips(nextTrips);
+    if (session?.user) saveTripToCloud(trip).then(cloudTrip => persistTrips(nextTrips.map(x => x.id === trip.id ? cloudTrip : x)));
+    setEditingId(null); setTab("Saved"); Alert.alert(editingId ? "Trip updated" : "Trip saved ✨", session?.user ? "Saved on this device. Cloud sync is running." : "Your trip is stored on this device.");
   };
   const openDestination = name => {
     const item = destinations.find(d => d.name === name);
@@ -124,10 +195,15 @@ export default function App() {
   const addExpense = () => {
     const amount = Number(expenseAmount);
     if (!expenseName.trim() || !Number.isFinite(amount) || amount <= 0) return Alert.alert("Check expense", "Enter a name and an amount greater than zero.");
-    persistExpenses([{ id: String(Date.now()), name: expenseName.trim(), amount, date: new Date().toISOString() }, ...expenses]);
+    const item = { id: String(Date.now()), name: expenseName.trim(), amount, date: new Date().toISOString() };
+    persistExpenses([item, ...expenses]);
+    if (session?.user) supabase.from("expenses").insert({ user_id: session.user.id, description: item.name, category: "Other", amount: item.amount, payment_status: "Planned", expense_date: item.date.slice(0, 10), trip_id: null }).select().single().then(({ data, error }) => {
+      if (error) setSyncMessage("Expense saved locally. Cloud sync failed: " + error.message);
+      else { const synced = { ...item, id: data.id }; persistExpenses(expenses.map(x => x.id === item.id ? synced : x)); }
+    });
     setExpenseName(""); setExpenseAmount("");
   };
-  const removeTrip = id => Alert.alert("Delete saved trip?", "This removes the trip from this device.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: () => persistTrips(saved.filter(x => x.id !== id)) }]);
+  const removeTrip = id => Alert.alert("Delete saved trip?", "This removes the trip from this device and, if synced, your account.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: async () => { const trip = saved.find(x => x.id === id); if (session?.user && trip?.cloudId) { const { error } = await supabase.from("trips").delete().eq("id", trip.cloudId); if (error) return Alert.alert("Delete failed", error.message); } persistTrips(saved.filter(x => x.id !== id)); } }]);
   const t = key => (UI_TEXT[language] || UI_TEXT.English)[key] || key;
   const nav = [["Dashboard",t("home")],["Explore",t("explore")],["Discover",t("discover")],["For You",t("forYou")],["Plan",t("plan")],["Stays",t("stays")],["Expenses",t("expenses")],["Groups","♧ Groups"],["Analytics",t("analytics")],["Saved",t("saved")]];
   const tripSpend = saved.reduce((sum,t)=>sum+(Number(t.total)||0),0);
@@ -236,7 +312,13 @@ export default function App() {
       </>}
       <View style={styles.footer}><Text style={styles.footerBrand}>WanderWise</Text><Text style={styles.footerText}>Thoughtful travel for real-world budgets.</Text><Text style={styles.footerText}>A PDAP project · Built for memorable journeys</Text></View>
     </ScrollView>
-    {showSettings&&<View style={styles.modalBackdrop}><View style={styles.modal}><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);AsyncStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>WanderWise saves trips and expenses locally on this device. Estimates are indicative and are not live prices.</Text><Button title="Export my data ↗" onPress={exportLocalData}/><Text style={styles.sectionCopy}>Export includes saved trips, expenses, and the local group roster.</Text><Text style={styles.sectionCopy}>Location access is not requested or collected by this version.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistTrips([])}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistExpenses([])}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></View></View>}
+    {showSettings&&<View style={styles.modalBackdrop}><View style={styles.modal}><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);AsyncStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>Account sync</Text>
+        <Text style={styles.sectionCopy}>{session?.user ? "Signed in as " + (session.user.email || "WanderWise traveller") : "Sign in or create an account to sync trips and expenses across devices."}</Text>
+        {!session?.user && <><Field label="Email" value={authEmail} onChangeText={setAuthEmail} placeholder="you@example.com"/><Field label="Password" value={authPassword} onChangeText={setAuthPassword} placeholder="At least 6 characters"/><View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}><Button title={authBusy ? "Please wait…" : authMode==="signup" ? "Create account" : "Sign in"} primary onPress={handleAuth}/><Button title={authMode==="signup" ? "I have an account" : "Create account"} onPress={()=>setAuthMode(authMode==="signup"?"signin":"signup")}/></View></>}
+        {!!session?.user && <><Button title="Sync now ↻" onPress={()=>syncCloudData(session)}/><Button title="Sign out" danger onPress={signOut}/></>}
+        <Text style={styles.sectionCopy}>{syncMessage}</Text>
+        <Text style={styles.sectionCopy}>Your local copy remains available. Account sync uses the same Supabase project as the WanderWise website.</Text>
+        <Text style={styles.sectionCopy}>Estimates are indicative and are not live prices.</Text><Button title="Export my data ↗" onPress={exportLocalData}/><Text style={styles.sectionCopy}>Export includes saved trips, expenses, and the local group roster.</Text><Text style={styles.sectionCopy}>Location access is not requested or collected by this version.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistTrips([])}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:()=>persistExpenses([])}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></View></View>}
   </SafeAreaView>;
 }
 function Metric({label,value,icon}) { return <View style={styles.metric}><Text style={{fontSize:22}}>{icon}</Text><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text></View>; }
