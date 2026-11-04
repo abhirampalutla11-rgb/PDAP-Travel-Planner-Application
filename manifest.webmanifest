@@ -1,0 +1,22 @@
+{
+  "id": "./",
+  "name": "WanderWise - Budget Travel Planner",
+  "short_name": "WanderWise",
+  "description": "Plan smarter, budget-friendly trips across India with WanderWise.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f3f6f4",
+  "theme_color": "#153e50",
+  "categories": ["travel", "lifestyle"],
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "./icons/wanderwise.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
