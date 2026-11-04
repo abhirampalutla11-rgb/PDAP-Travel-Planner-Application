@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  SafeAreaView, ScrollView, View, Text, TextInput, Pressable,
+  SafeAreaView, ScrollView, View, Text: NativeText, TextInput, Pressable,
   StyleSheet, StatusBar, Alert, Linking, Share
 } from "react-native";
 import "react-native-url-polyfill/auto";
@@ -13,6 +13,12 @@ import nacl from "tweetnacl";
 import naclUtil from "tweetnacl-util";
 import { WebView } from "react-native-webview";
 
+function Text({ style, ...props }) {
+  const flatStyle = StyleSheet.flatten(style) || {};
+  const fontSize = Number(flatStyle.fontSize) || 14;
+  const safeLineHeight = Math.max(Number(flatStyle.lineHeight) || 0, Math.ceil(fontSize * 1.4));
+  return <NativeText {...props} includeFontPadding={false} style={[style, { flexShrink: 1, lineHeight: safeLineHeight }]} />;
+}
 const GREEN = "#176B55", MINT = "#DFF4E9", ORANGE = "#F1A35B";
 const INK = "#172B3A", MUTED = "#60717D", LINE = "#E4EAE6";
 const KEY = "wanderwise.savedTrips.v1";
@@ -104,7 +110,7 @@ const destinations = [
 ];
 const money = n => "₹" + Math.max(0, Number(n) || 0).toLocaleString("en-IN");
 function Field({ label, value, onChangeText, keyboardType = "default", placeholder }) {
-  return <View style={styles.field}><Text style={styles.label}>{label}</Text><TextInput value={String(value)} onChangeText={onChangeText} keyboardType={keyboardType} placeholder={placeholder || "0"} placeholderTextColor="#91A099" style={styles.input} /></View>;
+  return <View style={styles.field}><Text style={styles.label}>{label}</Text><TextInput value={String(value)} onChangeText={onChangeText} keyboardType={keyboardType} placeholder={placeholder || "0"} placeholderTextColor="#91A099" includeFontPadding={false} style={styles.input} /></View>;
 }
 function Button({ title, onPress, primary = false, danger = false }) {
   return <Pressable onPress={onPress} style={({ pressed }) => [styles.button, primary && styles.primaryButton, danger && styles.dangerButton, pressed && { opacity: 0.78 }]}><Text style={[styles.buttonText, primary && styles.primaryButtonText, danger && styles.dangerButtonText]}>{title}</Text></Pressable>;
@@ -705,13 +711,13 @@ const styles = StyleSheet.create({
  tab:{paddingVertical:11,paddingHorizontal:13,alignItems:"center",borderRadius:11,backgroundColor:"#F8FAF8"},activeTab:{backgroundColor:MINT},tabText:{fontSize:12,color:MUTED,fontWeight:"700"},activeTabText:{color:GREEN},
  content:{padding:17,paddingBottom:40},hero:{backgroundColor:GREEN,borderRadius:22,padding:23,overflow:"hidden",marginBottom:24},eyebrow:{color:"#1A9A7C",fontSize:10,fontWeight:"900",letterSpacing:1.3,marginBottom:8},
  heroTitle:{color:"#FFFFFF",fontSize:34,lineHeight:39,fontWeight:"900",letterSpacing:-1.1,marginBottom:11},heroCopy:{color:"#E0F2E8",fontSize:14,lineHeight:21,marginBottom:15},heroBadge:{alignSelf:"flex-start",backgroundColor:"#FFFFFF18",borderRadius:30,paddingHorizontal:11,paddingVertical:7,marginTop:14},heroBadgeText:{color:"#FFFFFF",fontSize:10,fontWeight:"700"},
- button:{alignSelf:"flex-start",backgroundColor:MINT,borderRadius:11,paddingVertical:10,paddingHorizontal:13,marginTop:7},primaryButton:{backgroundColor:ORANGE},dangerButton:{backgroundColor:"#FFF0EF"},buttonText:{color:GREEN,fontWeight:"800",fontSize:12},primaryButtonText:{color:"#342517"},dangerButtonText:{color:"#B42318"},
+ button:{alignSelf:"flex-start",maxWidth:"100%",backgroundColor:MINT,borderRadius:11,paddingVertical:11,paddingHorizontal:13,marginTop:7},primaryButton:{backgroundColor:ORANGE},dangerButton:{backgroundColor:"#FFF0EF"},buttonText:{color:GREEN,fontWeight:"800",fontSize:12,lineHeight:18,textAlign:"center",flexShrink:1},primaryButtonText:{color:"#342517"},dangerButtonText:{color:"#B42318"},
  pageIntro:{marginBottom:14},sectionTitle:{color:INK,fontSize:24,lineHeight:30,fontWeight:"900",letterSpacing:-.6,marginBottom:5},sectionCopy:{color:MUTED,fontSize:13,lineHeight:19,marginBottom:13},
  metrics:{flexDirection:"row",flexWrap:"wrap",gap:10,marginBottom:24},metric:{width:"48%",flexGrow:1,backgroundColor:"#FFFFFF",borderWidth:1,borderColor:LINE,borderRadius:15,padding:13,gap:4},metricLabel:{color:MUTED,fontSize:11},metricValue:{color:INK,fontSize:18,fontWeight:"900"},
  quickGrid:{flexDirection:"row",flexWrap:"wrap",gap:10,marginBottom:18},quickCard:{width:"48%",flexGrow:1,backgroundColor:"#FFFFFF",borderWidth:1,borderColor:LINE,borderRadius:15,padding:14,gap:5},
  search:{backgroundColor:"#FFFFFF",borderWidth:1,borderColor:LINE,borderRadius:12,padding:13,fontSize:14,color:INK,marginBottom:13},destinationCard:{backgroundColor:"#FFFFFF",borderWidth:1,borderColor:LINE,borderRadius:16,padding:14,marginBottom:11,flexDirection:"row",alignItems:"center",gap:12},
  destinationIcon:{width:54,height:58,borderRadius:13,backgroundColor:MINT,alignItems:"center",justifyContent:"center"},destinationName:{fontSize:15,color:INK,fontWeight:"800",marginBottom:2},destinationRegion:{color:GREEN,fontSize:11,fontWeight:"800",marginBottom:3},destinationNote:{color:MUTED,fontSize:12,lineHeight:17,marginTop:2},destinationBudget:{color:GREEN,fontSize:11,fontWeight:"800",marginTop:6},inlineAction:{color:GREEN,fontSize:11,fontWeight:"800",marginTop:8},chevron:{color:GREEN,fontSize:27,paddingHorizontal:3},
- disclaimer:{color:MUTED,fontSize:10,lineHeight:15,marginTop:2,marginBottom:16},card:{backgroundColor:"#FFFFFF",borderRadius:18,borderWidth:1,borderColor:LINE,padding:16,marginBottom:15},field:{marginBottom:13},label:{fontSize:12,fontWeight:"800",color:INK,marginBottom:6},input:{backgroundColor:"#FBFCFA",borderWidth:1,borderColor:"#CCD8D1",borderRadius:10,paddingHorizontal:12,paddingVertical:11,color:INK,fontSize:14},
+ disclaimer:{color:MUTED,fontSize:10,lineHeight:15,marginTop:2,marginBottom:16},card:{backgroundColor:"#FFFFFF",borderRadius:18,borderWidth:1,borderColor:LINE,padding:16,marginBottom:15},field:{marginBottom:13},label:{fontSize:12,fontWeight:"800",color:INK,marginBottom:6},input:{backgroundColor:"#FBFCFA",borderWidth:1,borderColor:"#CCD8D1",borderRadius:10,paddingHorizontal:12,paddingVertical:12,minHeight:48,textAlignVertical:"center",color:INK,fontSize:14,lineHeight:20},
  twoFields:{flexDirection:"row",gap:10},formHeading:{fontSize:14,fontWeight:"900",color:INK,marginTop:3,marginBottom:12},totalBox:{backgroundColor:GREEN,borderRadius:15,padding:17,marginTop:3,marginBottom:10},totalLabel:{color:"#DFF4E9",fontSize:12,fontWeight:"700"},totalAmount:{color:"#FFFFFF",fontSize:31,fontWeight:"900",letterSpacing:-.7,marginVertical:3},totalHint:{color:"#DFF4E9",fontSize:11},costLine:{flexDirection:"row",justifyContent:"space-between",marginTop:7,paddingTop:6,borderTopWidth:1,borderTopColor:"#FFFFFF25"},
  tipCard:{backgroundColor:MINT,padding:16,borderRadius:15,marginBottom:10},tipTitle:{color:GREEN,fontSize:14,fontWeight:"900",marginBottom:6},empty:{backgroundColor:"#FFFFFF",borderWidth:1,borderColor:LINE,borderRadius:18,padding:25,alignItems:"center",marginTop:14,marginBottom:14},emptyTitle:{fontSize:17,color:INK,fontWeight:"900",marginTop:12,marginBottom:7,textAlign:"center"},
  savedCard:{backgroundColor:"#FFFFFF",borderWidth:1,borderColor:LINE,borderRadius:15,padding:15,marginBottom:11,flexDirection:"row",alignItems:"center",gap:10},removeButton:{backgroundColor:"#FFF0EF",paddingHorizontal:11,paddingVertical:9,borderRadius:9},stayCard:{backgroundColor:"#FFFFFF",borderWidth:1,borderColor:LINE,borderRadius:16,padding:15,marginBottom:12,flexDirection:"row",gap:14,alignItems:"flex-start"},
