@@ -96,6 +96,8 @@ The application currently has no package manifest or build pipeline. Keep the in
 - Fixed the quick-itinerary preview so the user-entered destination is HTML-escaped before insertion. This prevents markup entered in the destination field from being interpreted as page HTML.
 - Extracted authentication, main application logic, and PWA registration into separate JavaScript files while preserving their load order.
 - Updated the service-worker cache version and precache list so the extracted JavaScript modules remain available to the offline app shell.
+- Added destination-aware trip cost estimates using the curated destination dataset, with a clearly described general fallback and a rough Guntur-distance transport proxy. These values are planning estimates, not live fares or quotes.
+- Added an interactive budget optimizer with Economy, Standard and Comfort scenarios, potential savings by category, budget-gap messaging, and an action to apply the Economy estimate. Scenario percentages are assumptions and are labelled as such.
 
 ## Definition of done for each change
 
