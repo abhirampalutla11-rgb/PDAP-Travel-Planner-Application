@@ -41,9 +41,10 @@ function renderAnalytics(){const ts=trips(),es=expenses();const budgets=ts.reduc
 function estimate(t){
  const p=t.people,d=t.days,nights=Math.max(0,d-1);
  const key=String(t.destination||'').trim().toLowerCase();
- const place=typeof discoverPlaces!=='undefined'?discoverPlaces.find(x=>x.name.toLowerCase()===key||x.name.toLowerCase().startsWith(key)||key.startsWith(x.name.toLowerCase())):null;
- if(place&&typeof originCities!=='undefined'&&typeof discoverDistanceKm==='function'){
-  const origin=originCities.guntur,distance=discoverDistanceKm(origin,[place.lat,place.lon]);
+ const places=window.wanderWiseDiscoverPlaces||[],origins=window.wanderWiseOriginCities||{},distanceFn=window.wanderWiseDiscoverDistanceKm;
+ const place=places.find(x=>x.name.toLowerCase()===key||x.name.toLowerCase().startsWith(key)||key.startsWith(x.name.toLowerCase()));
+ if(place&&origins.guntur&&typeof distanceFn==='function'){
+  const origin=origins.guntur,distance=distanceFn(origin,[place.lat,place.lon]);
   const transport=Math.round(Math.max(180,distance*2*1.6)*p);
   const lodging=Math.round(place.stay*nights*p/2);
   const food=Math.round(place.food*p*d);
@@ -162,6 +163,7 @@ function setupWorkspace(){
 
  const originCities={'guntur':[16.3067,80.4365],'vijayawada':[16.5062,80.6480],'amaravati':[16.5745,80.3575],'hyderabad':[17.3850,78.4867],'visakhapatnam':[17.6868,83.2185],'vizag':[17.6868,83.2185],'chennai':[13.0827,80.2707],'bengaluru':[12.9716,77.5946],'bangalore':[12.9716,77.5946],'mumbai':[19.0760,72.8777],'pune':[18.5204,73.8567],'delhi':[28.6139,77.2090],'new delhi':[28.6139,77.2090],'kolkata':[22.5726,88.3639],'kochi':[9.9312,76.2673],'thiruvananthapuram':[8.5241,76.9366],'jaipur':[26.9124,75.7873],'lucknow':[26.8467,80.9462],'ahmedabad':[23.0225,72.5714],'patna':[25.5941,85.1376],'bhubaneswar':[20.2961,85.8245],'ranchi':[23.3441,85.3096],'guwahati':[26.1445,91.7362],'chandigarh':[30.7333,76.7794],'srinagar':[34.0837,74.7973],'dehradun':[30.3165,78.0322],'coimbatore':[11.0168,76.9558],'madurai':[9.9252,78.1198],'tirupati':[13.6288,79.4192]};
  function discoverDistanceKm(a,b){const rad=x=>x*Math.PI/180,lat1=rad(a[0]),lat2=rad(b[0]),dLat=rad(b[0]-a[0]),dLon=rad(b[1]-a[1]);const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;return 6371*2*Math.asin(Math.sqrt(Math.min(1,h)))}
+ window.wanderWiseOriginCities=originCities;window.wanderWiseDiscoverDistanceKm=discoverDistanceKm;
  window.wanderWiseDiscoverPlaces=discoverPlaces;
  window.wanderWiseAppNav=nav;
  function discoverEstimate(place,people,days,transport,stay){
