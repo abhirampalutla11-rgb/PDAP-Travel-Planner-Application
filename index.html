@@ -460,6 +460,11 @@ body.dark-mode .actions button:not(.primary),body.dark-mode .formActions button:
 #profileOpen{white-space:nowrap}
 @media(max-width:700px){.auth-tools{flex-wrap:wrap;justify-content:flex-end}.auth-status{max-width:140px}#profileOpen{font-size:.8rem;padding:7px}}
 
+
+/* Smart budget optimizer */
+.optimizerPanel{margin-top:20px;padding:18px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#f8fbf9,#fff)}
+.optimizerPanel h3{margin:0 0 5px;font-size:1.15rem}.optimizerPanel h4{margin:13px 0 8px}.optimizerScenarios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.optimizerScenario{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0;padding:13px;border:1px solid var(--line);border-radius:13px;background:#fff}.optimizerScenario h4{margin:2px 0}.optimizerScenario>strong{font-size:1.25rem;color:var(--green)}.optimizerScenario small{font-size:.8rem}.optimizerScenario p{font-size:.86rem;color:var(--muted);margin:0 0 8px;flex:1}.optimizerScenario button{font-size:.85rem;padding:9px 11px}.optimizerPanel>.sub{margin:4px 0}.optimizerPanel>small{display:block;margin-top:10px;line-height:1.45}
+@media(max-width:700px){.optimizerScenarios{grid-template-columns:1fr}.optimizerScenario{display:grid;grid-template-columns:1fr auto;align-items:center}.optimizerScenario .tag,.optimizerScenario h4,.optimizerScenario p{grid-column:1/-1}.optimizerScenario button{grid-column:1/-1;width:100%}}
 </style>
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="theme-color" content="#153e50">
