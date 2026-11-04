@@ -17,7 +17,8 @@ Native Android application for the PDAP Travel Planner, built with React Native 
 - Settings with English (default), Telugu, Hindi, and Tamil navigation preferences
 - User-controlled local Android trip reminders scheduled one day before saved trips
 - Authenticated local encryption for app data and Supabase sessions, with the encryption key held in Android secure storage
-- Email/password account sign-in and Supabase cloud sync for trips and expenses, using the same backend project as the website
+- Email/password and Google OAuth sign-in with Supabase PKCE deep-link handling, plus cloud sync for trips and expenses using the same backend project as the website
+- WanderWise compass logo in the app header, launcher icon, adaptive icon, and splash screen
 - Local data export through the Android share sheet and local data deletion controls
 
 Trip and expense data are encrypted on-device before local storage and can sync to the existing WanderWise Supabase account after sign-in. The encryption key is held in Android secure storage. Local storage remains available when offline. The app clearly labels destination and cost values as estimates, not live prices.
@@ -25,7 +26,7 @@ Trip and expense data are encrypted on-device before local storage and can sync 
 ## Free local development
 
 1. Install the current Node.js LTS release and Android Studio (including Android SDK and platform tools).
-2. Open a terminal in this folder and run `npm install`.
+2. Open a terminal in this folder and run `npm install`, then `node scripts/generate-assets.cjs` to create the PNG app icons from the included vector brand artwork.
 3. Run `npx expo start` and use Expo Go on an Android phone to preview the app.
 4. For a native Android build, run `npx expo prebuild --platform android`.
 5. Open the generated `android` folder in Android Studio, allow Gradle sync, then build an APK using **Build > Build Bundle(s) / APK(s) > Build APK(s)**. The preview APK is under `android/app/build/outputs/apk/release/`.
@@ -38,7 +39,7 @@ The public GitHub Actions workflow can build an APK without an Expo cloud token.
 
 ## Not yet implemented / next development stages
 
-- Google sign-in and password-recovery deep-link flow (email/password sign-in and account creation are implemented).
+- Google OAuth requires one-time Google Cloud OAuth client setup and enabling the Google provider / app redirect URL in the existing Supabase project. Password-recovery deep-link flow remains to be added.
 - Real shared group-trip collaboration, invitations, and synced role permissions.
 - Real-time booking updates, weather warnings, transport delays, hotel/transport price-drop feeds, and itinerary-change alerts. Local pre-trip reminders are implemented; real-time alerts need reliable free data providers and background refresh support.
 - Full translation of every screen (the language selector and primary navigation are localized in this pass).
