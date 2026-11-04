@@ -10,7 +10,7 @@ async function syncAccountData(session){
    client.from('expenses').select('*').order('created_at',{ascending:false})
   ]);
   if(tripError)throw tripError;if(expenseError)throw expenseError;
-  const mappedTrips=(tripRows||[]).map(r=>({id:r.id,destination:r.destination,start:r.start_date,end:r.end_date,people:r.travellers,days:Math.max(1,Math.round((new Date(r.end_date+'T00:00:00')-new Date(r.start_date+'T00:00:00'))/86400000)+1),budget:Number(r.budget),interests:Array.isArray(r.interests)?r.interests:[],costs:r.costs||estimate({people:r.travellers,days:1})}));
+  const mappedTrips=(tripRows||[]).map(r=>({id:r.id,destination:r.destination,start:r.start_date,end:r.end_date,people:r.travellers,days:Math.max(1,Math.round((new Date(r.end_date+'T00:00:00')-new Date(r.start_date+'T00:00:00'))/86400000)+1),budget:Number(r.budget),interests:Array.isArray(r.interests)?r.interests:[],itinerary:Array.isArray(r.itinerary)?r.itinerary:[],costs:r.costs||estimate({people:r.travellers,days:1})}));
   localStorage.setItem('pdapTrips',JSON.stringify(mappedTrips));
   localStorage.setItem('pdapExpenses',JSON.stringify((expenseRows||[]).map(r=>({id:r.id,name:r.description,category:r.category,amount:Number(r.amount),status:r.payment_status,tripId:r.trip_id,date:r.expense_date}))));
   renderSaved();renderExpenses();
@@ -21,7 +21,7 @@ window.syncAccountData=syncAccountData;
 async function requireAccount(){if(window.wwClient&&window.wwSession?.user)return true;alert('Please sign in first to save your trips and expenses to your account.');document.getElementById('authOpen')?.click();return false}
 async function upsertTrip(t){
  if(!await requireAccount())return false;
- const row={id:t.id,user_id:window.wwSession.user.id,destination:t.destination,start_date:t.start,end_date:t.end,travellers:t.people,budget:t.budget,interests:t.interests||[],itinerary:[],costs:t.costs||{}};
+ const row={id:t.id,user_id:window.wwSession.user.id,destination:t.destination,start_date:t.start,end_date:t.end,travellers:t.people,budget:t.budget,interests:t.interests||[],itinerary:t.itinerary||[],costs:t.costs||{}};
  const {data,error}=await window.wwClient.from('trips').upsert(row).select().single();if(error){console.error('WanderWise trip save error:',error);alert('Trip could not be saved: '+error.message);return false}if(!data){alert('Supabase did not confirm the trip was saved. Please check the trips table.');return false}return true
 }
 async function deleteTripFromDb(id){if(!await requireAccount())return false;const {error}=await window.wwClient.from('trips').delete().eq('id',id);if(error){alert('Trip could not be deleted: '+error.message);return false}return true}
@@ -76,7 +76,50 @@ function renderBudgetOptimizer(t){
  const tipHtml=tips.length?tips.map(x=>'<div class="saved"><span>'+x.label+' · possible saving</span><strong style="float:right">'+money(x.saving)+'</strong></div>').join(''):'<p class="sub">No adjustable cost categories are available for this trip yet.</p>';
  return '<section class="optimizerPanel"><p class="eyebrow">SMART BUDGET OPTIMIZER</p><h3>Choose a spending style</h3><p class="sub">Compare planning scenarios before you commit. These are adjustable estimates, not supplier quotes or guaranteed savings.</p><div class="optimizerScenarios"><article class="optimizerScenario"><span class="tag">Save more</span><h4>Economy</h4><strong>'+money(economy.total)+'</strong><small>'+(economy.total<=t.budget?'Within your budget':'Still above your budget')+'</small><p>Assumes lower-cost transport, stays, meals and activities.</p><button type="button" class="primary" id="applyEconomy">Use economy estimate</button></article><article class="optimizerScenario"><span class="tag">Current plan</span><h4>Standard</h4><strong>'+money(total)+'</strong><small>'+(total<=t.budget?'Within your budget':'Over budget by '+money(gap))+'</small><p>Your current trip estimate, without changes.</p></article><article class="optimizerScenario"><span class="tag">More comfort</span><h4>Comfort</h4><strong>'+money(comfort.total)+'</strong><small>'+(comfort.total<=t.budget?'Within your budget':'Over budget by '+money(Math.max(0,comfort.total-t.budget)))+'</small><p>Allows more room for stays, meals and activities.</p></article></div><h4>Where could you save?</h4>'+tipHtml+(gap>0?'<p class="notice">Your current estimate is '+money(gap)+' over budget. The economy scenario '+(economy.total<=t.budget?'could bring it within budget.':'reduces the estimate by '+money(total-economy.total)+', but it remains above budget.')+'</p>':'<p class="notice">Your current estimate fits your budget. Consider keeping a small contingency for unexpected costs.</p>')+'<small>Scenario percentages are planning assumptions. Confirm actual fares, room rates and activity fees before booking.</small></section>';
 }
-function render(t){current=t;priceLinks(t);let remaining=t.budget-t.costs.total;$('subtitle').textContent=t.destination+' • '+t.days+' day(s) • '+t.people+' traveller(s)';let templates=[['Arrive and get oriented','Explore a nearby area','Enjoy a relaxed evening'],['Visit a local attraction','Try local food within budget','Explore a market or cultural area'],['Choose an activity based on interests','Keep time for rest and photos','Review spending'],['Explore a quieter neighbourhood','Visit one final highlight','Prepare for departure']];let interest=t.interests.length?t.interests:['local highlights'];$('itinerary').className='';$('itinerary').innerHTML=Array.from({length:t.days},(_,i)=>'<div class="day"><strong>Day '+(i+1)+' · '+new Date(new Date(t.start+'T00:00:00').getTime()+i*86400000).toLocaleDateString('en-IN',{day:'numeric',month:'short'})+'</strong><ul>'+templates[Math.min(i,3)].map(x=>'<li>'+x+'</li>').join('')+'<li>Focus: '+interest[i%interest.length]+'</li></ul></div>').join('');
+const itineraryIdeas={
+ 'vijayawada & bhavani island':['Visit Kanaka Durga Temple or a nearby viewpoint','Explore Bhavani Island and the Krishna riverfront','Try local Andhra meals and take a relaxed riverside walk'],
+ 'amaravati':['Explore the Amaravati Stupa and archaeological museum area','Visit Dhyana Buddha and the riverfront area','Enjoy a relaxed local food stop and heritage walk'],
+ 'suryalanka beach':['Reach the beach area and enjoy the shoreline','Keep time for swimming only in permitted and safe zones','Enjoy sunset views and return before it gets late'],
+ 'araku valley':['Explore coffee plantations and local viewpoints','Visit the Tribal Museum and nearby market','Plan a relaxed scenic stop; check local transport before setting out'],
+ 'visakhapatnam':['Explore RK Beach and the nearby promenade','Visit Kailasagiri or a city viewpoint','Choose a local museum or beachside stop and enjoy local food'],
+ 'tirupati':['Plan darshan after checking official timings and booking rules','Explore a nearby temple or local heritage spot','Keep a relaxed meal and rest window before departure'],
+ 'hyderabad':['Explore Charminar and the old-city lanes','Visit Salar Jung Museum or a nearby heritage site','Enjoy a food stop and an evening walk around Hussain Sagar'],
+ 'goa':['Choose a nearby beach and check local swimming advisories','Explore a heritage quarter or local market','Keep sunset time free and plan a safe return'],
+ 'jaipur':['Explore Amber Fort and its surrounding area','Visit City Palace or Jantar Mantar','Explore a local bazaar and try Rajasthani food'],
+ 'agra':['Visit the Taj Mahal area after checking ticket and opening information','Explore Agra Fort and nearby heritage streets','Keep time for a relaxed meal and local craft market'],
+ 'varanasi':['Explore the ghats during daylight hours','Visit a nearby heritage temple area and local lanes','Check official Ganga Aarti timings and crowd guidance'],
+ 'munnar':['Explore tea gardens and permitted viewpoints','Visit a local tea museum or market','Keep a flexible scenic stop and rest window']
+};
+const defaultDayIdeas=[
+ ['Start with breakfast and a nearby orientation walk','Choose one main local attraction; allow travel time','Enjoy a relaxed evening meal and return to your stay'],
+ ['Visit a popular attraction or heritage area','Take a lunch and rest break before the next stop','Explore a market, promenade or local neighbourhood'],
+ ['Choose an activity matching your interests','Keep a flexible buffer for travel and photos','Review spending and enjoy a relaxed evening'],
+ ['Explore one final nearby highlight','Keep time for lunch and packing','Check departure details and travel back safely']
+];
+function buildDayPlan(t){
+ const key=String(t.destination||'').trim().toLowerCase(),ideas=itineraryIdeas[key]||null;
+ const interests=t.interests?.length?t.interests:['local highlights'];
+ return Array.from({length:t.days},(_,i)=>{
+  const base=defaultDayIdeas[Math.min(i,defaultDayIdeas.length-1)];
+  const special=ideas?ideas.map((x,j)=>ideas[(j+i)%ideas.length]):null;
+  const slots=special||base;
+  return {date:new Date(new Date(t.start+'T00:00:00').getTime()+i*86400000).toLocaleDateString('en-IN',{day:'numeric',month:'short'}),morning:slots[0],afternoon:slots[1],evening:slots[2],interest:interests[i%interests.length]};
+ });
+}
+function renderDayPlan(t){
+ if(!Array.isArray(t.itinerary)||t.itinerary.length!==t.days)t.itinerary=buildDayPlan(t);
+ const slots=[['morning','🌅 Morning','8:00 AM – 11:30 AM'],['afternoon','☀️ Afternoon','12:00 PM – 4:00 PM'],['evening','🌇 Evening','4:30 PM – 8:00 PM']];
+ $('itinerary').className='';
+ $('itinerary').innerHTML=t.itinerary.map((day,i)=>'<article class="day itineraryDay"><div class="itineraryDayHead"><strong>Day '+(i+1)+' · '+esc(day.date||'Trip day')+'</strong><span class="tag">Flexible plan</span></div><div class="itinerarySlots">'+slots.map(([key,label,time])=>'<label class="itinerarySlot"><span>'+label+' <small>'+time+'</small></span><textarea rows="2" data-day="'+i+'" data-slot="'+key+'" maxlength="220">'+esc(day[key]||'')+'</textarea></label>').join('')+'</div><p class="itineraryHint">Travel buffer and rest time are intentionally left between activities. Confirm local opening hours and access before visiting.</p></article>').join('')+'<div class="actions"><button type="button" class="primary" id="saveItinerary">Save itinerary edits</button><button type="button" id="resetItinerary">Restore suggested plan</button></div><p id="itineraryStatus" class="sub" aria-live="polite">Edit any activity above. Your changes are kept with this trip when you save it.</p>';
+ $('saveItinerary').onclick=async()=>{
+  $('itinerary').querySelectorAll('textarea[data-day]').forEach(field=>{const d=Number(field.dataset.day),slot=field.dataset.slot;if(t.itinerary[d])t.itinerary[d][slot]=field.value.trim()});
+  const all=trips(),idx=all.findIndex(x=>x.id===t.id);if(idx>=0){all[idx]={...all[idx],itinerary:t.itinerary};saveTrips(all)}
+  const status=$('itineraryStatus');status.textContent='Itinerary edits saved on this device.'; 
+  if(window.wwClient&&window.wwSession?.user){const ok=await upsertTrip(t);if(ok)status.textContent='Itinerary edits saved on this device and synced to your account.'}
+ };
+ $('resetItinerary').onclick=()=>{t.itinerary=buildDayPlan(t);renderDayPlan(t)};
+}
+function render(t){current=t;priceLinks(t);let remaining=t.budget-t.costs.total;$('subtitle').textContent=t.destination+' • '+t.days+' day(s) • '+t.people+' traveller(s)';renderDayPlan(t);
 $('budgetPanel').className='';$('budgetPanel').innerHTML='<div class="summary"><div>Estimated total<strong>'+money(t.costs.total)+'</strong></div><div>Remaining<strong style="color:'+(remaining<0?'var(--red)':'var(--green)')+'">'+money(remaining)+'</strong></div><div>Per traveller<strong>'+money(Math.round(t.costs.total/t.people))+'</strong></div></div><p>'+ (remaining<0?'⚠️ Estimate exceeds budget by '+money(-remaining):'✓ Estimate is within budget, with '+money(remaining)+' remaining')+'</p><div class="bar"><span style="width:'+Math.min(100,t.costs.total/t.budget*100)+'%;background:'+(remaining<0?'var(--red)':'var(--green)')+'"></span></div><strong>Estimated cost breakdown</strong>'+[['Transport',t.costs.transport],['Lodging',t.costs.lodging],['Food',t.costs.food],['Activities',t.costs.activities]].map(([k,v])=>'<div class="saved">'+k+' <strong style="float:right">'+money(v)+'</strong></div>').join('')+'<div class="actions"><button id="saveBtn" class="primary">Save trip</button><button id="editBtn">Edit trip</button></div>';
 $('budgetDetails').classList.remove('hidden');$('budgetDetails').innerHTML='<strong>📊 More budget details</strong><div class="saved">Average per traveller<strong style="float:right">'+money(Math.round(t.costs.total/t.people))+'</strong></div><div class="saved">Average per traveller, per day<strong style="float:right">'+money(Math.round(t.costs.total/(t.people*t.days)))+'</strong></div><div class="saved">Transport per traveller<strong style="float:right">'+money(Math.round(t.costs.transport/t.people))+'</strong></div><div class="saved">Lodging per traveller<strong style="float:right">'+money(Math.round(t.costs.lodging/t.people))+'</strong></div><div class="saved">Food per traveller, per day<strong style="float:right">'+money(Math.round(t.costs.food/(t.people*t.days)))+'</strong></div><small>Destination-based planning estimate where the destination is in our curated list; otherwise a general estimate. Transport is a rough road-distance proxy from Guntur, not a live fare or route quote. All figures need confirmation before booking.</small>';
 $('budgetDetails').innerHTML+=renderBudgetOptimizer(t);
