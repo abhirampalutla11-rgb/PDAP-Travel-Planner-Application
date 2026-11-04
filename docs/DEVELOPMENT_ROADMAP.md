@@ -91,9 +91,11 @@ The application currently has no package manifest or build pipeline. Keep the in
 - Test PWA installation and offline fallback on supported browsers.
 - Publish only after regression checks.
 
-## Current development change
+## Current development changes
 
 - Fixed the quick-itinerary preview so the user-entered destination is HTML-escaped before insertion. This prevents markup entered in the destination field from being interpreted as page HTML.
+- Extracted authentication, main application logic, and PWA registration into separate JavaScript files while preserving their load order.
+- Updated the service-worker cache version and precache list so the extracted JavaScript modules remain available to the offline app shell.
 
 ## Definition of done for each change
 
