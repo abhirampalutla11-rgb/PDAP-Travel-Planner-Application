@@ -18,13 +18,17 @@ const KEY = "wanderwise.savedTrips.v1";
 const SUPABASE_URL = "https://hmjtzyakidwtkzhhbgzd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3dsWrDTOtIz6eWi_ndF4Qw_GJIUY8o6";
 const STORAGE_KEY = "wanderwise.device-encryption-key.v1";
-const getDeviceEncryptionKey = async () => {
-  let encoded = await SecureStore.getItemAsync(STORAGE_KEY);
-  if (!encoded) {
-    encoded = naclUtil.encodeBase64(await Crypto.getRandomBytesAsync(nacl.secretbox.keyLength));
-    await SecureStore.setItemAsync(STORAGE_KEY, encoded);
-  }
-  return naclUtil.decodeBase64(encoded);
+let deviceEncryptionKeyPromise = null;
+const getDeviceEncryptionKey = () => {
+  if (!deviceEncryptionKeyPromise) deviceEncryptionKeyPromise = (async () => {
+    let encoded = await SecureStore.getItemAsync(STORAGE_KEY);
+    if (!encoded) {
+      encoded = naclUtil.encodeBase64(await Crypto.getRandomBytesAsync(nacl.secretbox.keyLength));
+      await SecureStore.setItemAsync(STORAGE_KEY, encoded);
+    }
+    return naclUtil.decodeBase64(encoded);
+  })();
+  return deviceEncryptionKeyPromise;
 };
 const encryptedStorage = {
   async getItem(key) {
