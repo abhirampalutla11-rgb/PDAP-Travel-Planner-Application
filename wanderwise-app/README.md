@@ -48,3 +48,16 @@ The public GitHub Actions workflow can build an APK without an Expo cloud token.
 - Account deletion workflow (local data export and deletion controls are available; deleting a Supabase identity requires a protected account-management flow).
 
 No paid APIs, subscriptions, or paid SDKs are required for the current app source. The APK build can be run locally or through the public-repository workflow.
+
+
+## One-time Google Sign-In setup
+
+The app code uses Supabase OAuth with PKCE and returns to the installed app at `wanderwise://auth/callback`. To enable the Google button for real accounts:
+
+1. In Google Cloud Console, configure the OAuth consent screen and create a **Web application** OAuth client.
+2. Add this exact authorized redirect URI to that Google OAuth client: `https://hmjtzyakidwtkzhhbgzd.supabase.co/auth/v1/callback`.
+3. In the existing Supabase project, open **Authentication → Sign In / Providers → Google**, enable Google, and enter the Google client ID and client secret. Keep the secret in Supabase only; never put it in the app source or GitHub.
+4. In Supabase **Authentication → URL Configuration → Redirect URLs**, allow `wanderwise://auth/callback`.
+5. If Google's consent screen is in Testing mode, add the Google accounts that should be allowed as test users.
+
+The app-side integration is present, but Google authentication will not complete until this provider and redirect allowlist are configured in the Supabase dashboard.
