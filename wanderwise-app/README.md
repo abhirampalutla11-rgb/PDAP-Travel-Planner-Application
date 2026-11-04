@@ -15,10 +15,12 @@ Native Android application for the PDAP Travel Planner, built with React Native 
 - Group trip roster with organizer, planner, traveller, and viewer roles (local draft only)
 - External Google Maps hand-off for destination locations (no API key required)
 - Settings with English (default), Telugu, Hindi, and Tamil navigation preferences
+- User-controlled local Android trip reminders scheduled one day before saved trips
+- Authenticated local encryption for app data and Supabase sessions, with the encryption key held in Android secure storage
 - Email/password account sign-in and Supabase cloud sync for trips and expenses, using the same backend project as the website
 - Local data export through the Android share sheet and local data deletion controls
 
-Trip and expense data are stored locally with AsyncStorage and can sync to the existing WanderWise Supabase account after sign-in. Local storage remains available when offline. The app clearly labels destination and cost values as estimates, not live prices.
+Trip and expense data are encrypted on-device before local storage and can sync to the existing WanderWise Supabase account after sign-in. The encryption key is held in Android secure storage. Local storage remains available when offline. The app clearly labels destination and cost values as estimates, not live prices.
 
 ## Free local development
 
@@ -38,9 +40,10 @@ The public GitHub Actions workflow can build an APK without an Expo cloud token.
 
 - Google sign-in and password-recovery deep-link flow (email/password sign-in and account creation are implemented).
 - Real shared group-trip collaboration, invitations, and synced role permissions.
-- Native scheduled notifications and live weather, delay, or price-drop feeds. These need device notification integration and suitable data providers; no paid API is included.
+- Real-time booking updates, weather warnings, transport delays, hotel/transport price-drop feeds, and itinerary-change alerts. Local pre-trip reminders are implemented; real-time alerts need reliable free data providers and background refresh support.
 - Full translation of every screen (the language selector and primary navigation are localized in this pass).
 - Embedded in-app maps, turn-by-turn route navigation, and live availability feeds. The app hands off map and hotel searches to external services.
 - Full dark-mode theme.
+- Account deletion workflow (local data export and deletion controls are available; deleting a Supabase identity requires a protected account-management flow).
 
 No paid APIs, subscriptions, or paid SDKs are required for the current app source. The APK build can be run locally or through the public-repository workflow.
