@@ -6,6 +6,7 @@ import {
 import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
+import * as Notifications from "expo-notifications";
 
 const GREEN = "#176B55", MINT = "#DFF4E9", ORANGE = "#F1A35B";
 const INK = "#172B3A", MUTED = "#60717D", LINE = "#E4EAE6";
@@ -103,14 +104,16 @@ export default function App() {
   const [miniDestination, setMiniDestination] = useState("");
   const [miniDays, setMiniDays] = useState("2");
   const [miniPlan, setMiniPlan] = useState([]);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1", "wanderwise.groupMembers.v1"]).then(rows => {
-      const trips = rows[0]?.[1], costs = rows[1]?.[1], savedLanguage = rows[2]?.[1], members = rows[3]?.[1];
+    AsyncStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1", "wanderwise.groupMembers.v1", "wanderwise.notifications.v1"]).then(rows => {
+      const trips = rows[0]?.[1], costs = rows[1]?.[1], savedLanguage = rows[2]?.[1], members = rows[3]?.[1], reminders = rows[4]?.[1];
       if (trips) setSaved(JSON.parse(trips));
       if (costs) setExpenses(JSON.parse(costs));
       if (savedLanguage && UI_TEXT[savedLanguage]) setLanguage(savedLanguage);
       if (members) setGroupMembers(JSON.parse(members));
+      if (reminders === "true") setNotificationsEnabled(true);
     }).catch(() => Alert.alert("Storage notice", "Saved data could not be loaded on this launch."));
     supabase.auth.getSession().then(({ data }) => { setSession(data.session || null); if (data.session) syncCloudData(data.session); });
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
@@ -223,6 +226,39 @@ export default function App() {
     setDestination(place);
   };
   const signOut = async () => { const { error } = await supabase.auth.signOut(); if (error) Alert.alert("Sign out failed", error.message); };
+  const refreshTripReminders = async trips => {
+    if (!notificationsEnabled) return;
+    try {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      const permission = await Notifications.getPermissionsAsync();
+      if (permission.status !== "granted") return;
+      await Notifications.setNotificationChannelAsync("trip-reminders", { name: "Trip reminders", importance: Notifications.AndroidImportance.DEFAULT });
+      for (const trip of trips) {
+        if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(trip.date || "")) continue;
+        const reminder = new Date(trip.date + "T09:00:00");
+        reminder.setDate(reminder.getDate() - 1);
+        if (reminder <= new Date()) continue;
+        await Notifications.scheduleNotificationAsync({
+          content: { title: "Your WanderWise trip is coming up ✈️", body: trip.destination + " is one day away. Check your plan and travel essentials.", data: { tripId: trip.id } },
+          trigger: reminder
+        });
+      }
+    } catch (error) { setSyncMessage("Trip reminder could not be scheduled: " + (error?.message || "Notification service unavailable.")); }
+  };
+  const toggleTripReminders = async () => {
+    if (notificationsEnabled) {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      setNotificationsEnabled(false);
+      await AsyncStorage.setItem("wanderwise.notifications.v1", "false");
+      return;
+    }
+    let permission = await Notifications.getPermissionsAsync();
+    if (permission.status !== "granted") permission = await Notifications.requestPermissionsAsync();
+    if (permission.status !== "granted") return Alert.alert("Notifications not enabled", "Allow notifications in Android settings to receive trip reminders.");
+    setNotificationsEnabled(true);
+    await AsyncStorage.setItem("wanderwise.notifications.v1", "true");
+    await refreshTripReminders(saved);
+  };
   const clearTrips = async () => {
     if (session?.user) { const { error } = await supabase.from("trips").delete().eq("user_id", session.user.id); if (error) return Alert.alert("Could not clear trips", error.message); }
     await persistTrips([]);
@@ -260,6 +296,7 @@ export default function App() {
     const trip = { id: editingId || String(Date.now()), cloudId: editingId && /^[0-9a-f-]{36}$/i.test(editingId) ? editingId : saved.find(x => x.id === editingId)?.cloudId, title: tripTitle.trim() || destination.trim(), destination: destination.trim(), days: safeDays, people: safePeople, travel: Number(travel)||0, stay: Number(stay)||0, food: Number(food)||0, extras: Number(extras)||0, budgetLimit: Number(budgetLimit)||0, total, date: tripDate, createdAt: new Date().toISOString() };
     const nextTrips = editingId ? saved.map(x => x.id === editingId ? trip : x) : [trip, ...saved];
     persistTrips(nextTrips);
+    refreshTripReminders(nextTrips);
     if (session?.user) saveTripToCloud(trip).then(cloudTrip => persistTrips(nextTrips.map(x => x.id === trip.id ? cloudTrip : x)));
     setEditingId(null); setTab("Saved"); Alert.alert(editingId ? "Trip updated" : "Trip saved ✨", session?.user ? "Saved on this device. Cloud sync is running." : "Your trip is stored on this device.");
   };
@@ -428,7 +465,11 @@ export default function App() {
       </>}
       <View style={styles.footer}><Text style={styles.footerBrand}>WanderWise</Text><Text style={styles.footerText}>Thoughtful travel for real-world budgets.</Text><Text style={styles.footerText}>A PDAP project · Built for memorable journeys</Text></View>
     </ScrollView>
-    {showSettings&&<View style={styles.modalBackdrop}><View style={styles.modal}><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);AsyncStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>Account sync</Text>
+    {showSettings&&<View style={styles.modalBackdrop}><View style={styles.modal}><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);AsyncStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>Trip reminders</Text>
+        <Text style={styles.sectionCopy}>Receive a local Android notification one day before a saved trip with a travel checklist nudge. This does not require a paid service.</Text>
+        <Button title={notificationsEnabled ? "Turn off trip reminders" : "Enable trip reminders"} primary onPress={toggleTripReminders}/>
+        <Text style={styles.sectionCopy}>{notificationsEnabled ? "Trip reminders are enabled. Android notification permission is active." : "Trip reminders are off until you enable them."}</Text>
+        <Text style={styles.sectionCopy}>Account sync</Text>
         <Text style={styles.sectionCopy}>{session?.user ? "Signed in as " + (session.user.email || "WanderWise traveller") : "Sign in or create an account to sync trips and expenses across devices."}</Text>
         {!session?.user && <><Field label="Email" value={authEmail} onChangeText={setAuthEmail} placeholder="you@example.com"/><Field label="Password" value={authPassword} onChangeText={setAuthPassword} placeholder="At least 6 characters"/><View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}><Button title={authBusy ? "Please wait…" : authMode==="signup" ? "Create account" : "Sign in"} primary onPress={handleAuth}/><Button title={authMode==="signup" ? "I have an account" : "Create account"} onPress={()=>setAuthMode(authMode==="signup"?"signin":"signup")}/></View></>}
         {!!session?.user && <><Button title="Sync now ↻" onPress={()=>syncCloudData(session)}/><Button title="Sign out" danger onPress={signOut}/></>}
