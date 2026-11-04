@@ -226,15 +226,15 @@ export default function App() {
     setDestination(place);
   };
   const signOut = async () => { const { error } = await supabase.auth.signOut(); if (error) Alert.alert("Sign out failed", error.message); };
-  const refreshTripReminders = async trips => {
-    if (!notificationsEnabled) return;
+  const refreshTripReminders = async (trips, force = false) => {
+    if (!notificationsEnabled && !force) return;
     try {
       await Notifications.cancelAllScheduledNotificationsAsync();
       const permission = await Notifications.getPermissionsAsync();
       if (permission.status !== "granted") return;
       await Notifications.setNotificationChannelAsync("trip-reminders", { name: "Trip reminders", importance: Notifications.AndroidImportance.DEFAULT });
       for (const trip of trips) {
-        if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(trip.date || "")) continue;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(trip.date || "")) continue;
         const reminder = new Date(trip.date + "T09:00:00");
         reminder.setDate(reminder.getDate() - 1);
         if (reminder <= new Date()) continue;
@@ -257,7 +257,7 @@ export default function App() {
     if (permission.status !== "granted") return Alert.alert("Notifications not enabled", "Allow notifications in Android settings to receive trip reminders.");
     setNotificationsEnabled(true);
     await AsyncStorage.setItem("wanderwise.notifications.v1", "true");
-    await refreshTripReminders(saved);
+    await refreshTripReminders(saved, true);
   };
   const clearTrips = async () => {
     if (session?.user) { const { error } = await supabase.from("trips").delete().eq("user_id", session.user.id); if (error) return Alert.alert("Could not clear trips", error.message); }
@@ -465,7 +465,7 @@ export default function App() {
       </>}
       <View style={styles.footer}><Text style={styles.footerBrand}>WanderWise</Text><Text style={styles.footerText}>Thoughtful travel for real-world budgets.</Text><Text style={styles.footerText}>A PDAP project · Built for memorable journeys</Text></View>
     </ScrollView>
-    {showSettings&&<View style={styles.modalBackdrop}><View style={styles.modal}><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);AsyncStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>Trip reminders</Text>
+    {showSettings&&<View style={styles.modalBackdrop}><ScrollView style={styles.modal} keyboardShouldPersistTaps="handled"><Text style={styles.sectionTitle}>{t("settings")}</Text><Text style={styles.label}>{t("language")}</Text><View style={{flexDirection:"row",flexWrap:"wrap",gap:7,marginBottom:12}}>{["English","Telugu","Hindi","Tamil"].map(item=><Pressable key={item} onPress={()=>{setLanguage(item);AsyncStorage.setItem("wanderwise.language.v1",item).catch(()=>Alert.alert("Language","Could not save this preference."));}} style={[styles.chip,language===item&&styles.chipActive]}><Text style={[styles.chipText,language===item&&styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.sectionCopy}>Trip reminders</Text>
         <Text style={styles.sectionCopy}>Receive a local Android notification one day before a saved trip with a travel checklist nudge. This does not require a paid service.</Text>
         <Button title={notificationsEnabled ? "Turn off trip reminders" : "Enable trip reminders"} primary onPress={toggleTripReminders}/>
         <Text style={styles.sectionCopy}>{notificationsEnabled ? "Trip reminders are enabled. Android notification permission is active." : "Trip reminders are off until you enable them."}</Text>
@@ -475,7 +475,7 @@ export default function App() {
         {!!session?.user && <><Button title="Sync now ↻" onPress={()=>syncCloudData(session)}/><Button title="Sign out" danger onPress={signOut}/></>}
         <Text style={styles.sectionCopy}>{syncMessage}</Text>
         <Text style={styles.sectionCopy}>Your local copy remains available. Account sync uses the same Supabase project as the WanderWise website.</Text>
-        <Text style={styles.sectionCopy}>Estimates are indicative and are not live prices.</Text><Button title="Export my data ↗" onPress={exportLocalData}/><Text style={styles.sectionCopy}>Export includes saved trips, expenses, and the local group roster.</Text><Text style={styles.sectionCopy}>Location access is not requested or collected by this version.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearTrips}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearExpenses}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></View></View>}
+        <Text style={styles.sectionCopy}>Estimates are indicative and are not live prices.</Text><Button title="Export my data ↗" onPress={exportLocalData}/><Text style={styles.sectionCopy}>Export includes saved trips, expenses, and the local group roster.</Text><Text style={styles.sectionCopy}>Location access is not requested or collected by this version.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearTrips}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearExpenses}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></ScrollView></View>}
   </SafeAreaView>;
 }
 function Metric({label,value,icon}) { return <View style={styles.metric}><Text style={{fontSize:22}}>{icon}</Text><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text></View>; }
