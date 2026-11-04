@@ -971,7 +971,7 @@ renderSaved();renderExpenses();renderAnalytics();renderHotelHistory();
   const destination=$('miniDestination').value.trim(),days=Number($('miniDays').value),box=$('miniPlanResult');
   if(!destination){box.textContent='Enter a destination first, for example Araku Valley.';$('miniDestination').focus();return}
   const templates=[['Morning','Arrive, have breakfast, and visit a popular local attraction.'],['Afternoon','Have lunch and explore a nearby viewpoint, museum, market, or nature spot.'],['Evening','Enjoy a relaxed walk, take photos, and find a local dinner spot.']];
-  box.innerHTML='<strong>'+destination+' · '+days+' day(s)</strong>'+Array.from({length:days},(_,i)=>'<div class="saved"><strong>Day '+(i+1)+'</strong>'+templates.map(([time,task])=>'<p><b>'+time+':</b> '+task+'</p>').join('')+'</div>').join('')+'<small>Starter itinerary only. Check opening hours, travel times, and local conditions before your trip.</small>';
+  box.innerHTML='<strong>'+esc(destination)+' · '+days+' day(s)</strong>'+Array.from({length:days},(_,i)=>'<div class="saved"><strong>Day '+(i+1)+'</strong>'+templates.map(([time,task])=>'<p><b>'+time+':</b> '+task+'</p>').join('')+'</div>').join('')+'<small>Starter itinerary only. Check opening hours, travel times, and local conditions before your trip.</small>';
  });
 })();
 
