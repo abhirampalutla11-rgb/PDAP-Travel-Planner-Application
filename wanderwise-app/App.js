@@ -13,6 +13,7 @@ const KEY = "wanderwise.savedTrips.v1";
 const SUPABASE_URL = "https://hmjtzyakidwtkzhhbgzd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3dsWrDTOtIz6eWi_ndF4Qw_GJIUY8o6";
 const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false } });
+let cloudSyncInProgress = false;
 const UI_TEXT = {
   English: { home:"⌂ Home", explore:"⌖ Explore", discover:"✦ Discover", forYou:"✧ For You", plan:"✎ Plan trip", stays:"⌂ Stays", expenses:"₹ Expenses", analytics:"▥ Insights", saved:"♡ Saved", tagline:"Small budget. Big memories.", settings:"Settings", language:"App language" },
   Telugu: { home:"⌂ హోమ్", explore:"⌖ అన్వేషించు", discover:"✦ కనుగొను", forYou:"✧ మీ కోసం", plan:"✎ ప్రయాణ ప్రణాళిక", stays:"⌂ వసతి", expenses:"₹ ఖర్చులు", analytics:"▥ విశ్లేషణ", saved:"♡ సేవ్ చేసినవి", tagline:"చిన్న బడ్జెట్. పెద్ద జ్ఞాపకాలు.", settings:"సెట్టింగ్స్", language:"యాప్ భాష" },
@@ -124,9 +125,27 @@ export default function App() {
     return (Number(travel) || 0) * p + (Number(stay) || 0) * Math.max(0, d - 1) + (Number(food) || 0) * d * p + (Number(extras) || 0);
   }, [days, people, travel, stay, food, extras]);
   const syncCloudData = async activeSession => {
-    if (!activeSession?.user) return;
+    if (!activeSession?.user || cloudSyncInProgress) return;
+    cloudSyncInProgress = true;
     setSyncMessage("Syncing your WanderWise account…");
     try {
+      const localTrips = JSON.parse((await AsyncStorage.getItem(KEY)) || "[]");
+      const localExpenses = JSON.parse((await AsyncStorage.getItem("wanderwise.expenses.v1")) || "[]");
+      const isUuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ""));
+      for (const trip of localTrips.filter(item => !item.cloudId && !isUuid(item.id))) {
+        const start = /^\\d{4}-\\d{2}-\\d{2}$/.test(trip.date || "") ? trip.date : new Date().toISOString().slice(0, 10);
+        const endDate = new Date(start + "T00:00:00"); endDate.setDate(endDate.getDate() + Math.max(0, Number(trip.days || 1) - 1));
+        const end = endDate.getFullYear() + "-" + String(endDate.getMonth()+1).padStart(2,"0") + "-" + String(endDate.getDate()).padStart(2,"0");
+        const costs = { transport: (Number(trip.travel)||0)*(Number(trip.people)||1), lodging: (Number(trip.stay)||0)*Math.max(0,Number(trip.days||1)-1), food: (Number(trip.food)||0)*(Number(trip.people)||1)*(Number(trip.days)||1), activities: Number(trip.extras)||0, total: Number(trip.total)||0 };
+        const { data, error } = await supabase.from("trips").insert({ user_id: activeSession.user.id, destination: trip.destination, start_date: start, end_date: end, travellers: trip.people, budget: trip.budgetLimit, interests: [], itinerary: [], costs }).select().single();
+        if (error) throw error;
+        trip.id = data.id; trip.cloudId = data.id;
+      }
+      for (const expense of localExpenses.filter(item => !isUuid(item.id))) {
+        const { data, error } = await supabase.from("expenses").insert({ user_id: activeSession.user.id, description: expense.name, category: "Other", amount: Number(expense.amount)||0, payment_status: "Planned", expense_date: String(expense.date || new Date().toISOString()).slice(0,10), trip_id: null }).select().single();
+        if (error) throw error;
+        expense.id = data.id;
+      }
       const [{ data: tripRows, error: tripError }, { data: expenseRows, error: expenseError }] = await Promise.all([
         supabase.from("trips").select("*").order("created_at", { ascending: false }),
         supabase.from("expenses").select("*").order("created_at", { ascending: false })
@@ -134,16 +153,22 @@ export default function App() {
       if (tripError) throw tripError;
       if (expenseError) throw expenseError;
       const cloudTrips = (tripRows || []).map(row => {
-        const c = row.costs || {}, days = Math.max(1, Math.round((new Date(row.end_date + "T00:00:00") - new Date(row.start_date + "T00:00:00")) / 86400000) + 1);
+        const c = row.costs || {}, start = row.start_date || new Date().toISOString().slice(0,10), end = row.end_date || start;
+        const days = Math.max(1, Math.round((new Date(end + "T00:00:00") - new Date(start + "T00:00:00")) / 86400000) + 1);
         const peopleCount = Math.max(1, Number(row.travellers) || 1);
-        return { id: row.id, cloudId: row.id, title: row.destination, destination: row.destination, days, people: peopleCount, travel: Number(c.transport) || 0, stay: days > 1 ? (Number(c.lodging) || 0) / (days - 1) : 0, food: peopleCount * days ? (Number(c.food) || 0) / (peopleCount * days) : 0, extras: Number(c.activities) || 0, budgetLimit: Number(row.budget) || 0, total: Number(c.total) || (Number(c.transport)||0)+(Number(c.lodging)||0)+(Number(c.food)||0)+(Number(c.activities)||0), date: row.start_date || "", createdAt: row.created_at };
+        return { id: row.id, cloudId: row.id, title: row.destination, destination: row.destination, days, people: peopleCount, travel: Number(c.transport) || 0, stay: days > 1 ? (Number(c.lodging) || 0) / (days - 1) : 0, food: (Number(c.food) || 0) / (peopleCount * days), extras: Number(c.activities) || 0, budgetLimit: Number(row.budget) || 0, total: Number(c.total) || (Number(c.transport)||0)+(Number(c.lodging)||0)+(Number(c.food)||0)+(Number(c.activities)||0), date: start, createdAt: row.created_at };
       });
       const cloudExpenses = (expenseRows || []).map(row => ({ id: row.id, name: row.description, amount: Number(row.amount) || 0, date: row.expense_date || row.created_at }));
-      setSaved(cloudTrips); setExpenses(cloudExpenses);
-      await AsyncStorage.multiSet([[KEY, JSON.stringify(cloudTrips)], ["wanderwise.expenses.v1", JSON.stringify(cloudExpenses)]]);
+      const tripIds = new Set(cloudTrips.map(item => item.id)), expenseIds = new Set(cloudExpenses.map(item => item.id));
+      const mergedTrips = [...cloudTrips, ...localTrips.filter(item => !item.cloudId && !tripIds.has(item.id))];
+      const mergedExpenses = [...cloudExpenses, ...localExpenses.filter(item => !isUuid(item.id) && !expenseIds.has(item.id))];
+      setSaved(mergedTrips); setExpenses(mergedExpenses);
+      await AsyncStorage.multiSet([[KEY, JSON.stringify(mergedTrips)], ["wanderwise.expenses.v1", JSON.stringify(mergedExpenses)]]);
       setSyncMessage("Synced " + cloudTrips.length + " trip(s) and " + cloudExpenses.length + " expense(s).");
     } catch (error) {
       setSyncMessage("Cloud sync unavailable: " + (error?.message || "Check your account and Supabase table policies.") + " Your local data is still available.");
+    } finally {
+      cloudSyncInProgress = false;
     }
   };
   const handleAuth = async () => {
