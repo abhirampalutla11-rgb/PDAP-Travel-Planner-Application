@@ -113,8 +113,8 @@ function renderDayPlan(t){
  $('itinerary').innerHTML=t.itinerary.map((day,i)=>'<article class="day itineraryDay"><div class="itineraryDayHead"><strong>Day '+(i+1)+' · '+esc(day.date||'Trip day')+'</strong><span class="tag">Flexible plan</span></div><div class="itinerarySlots">'+slots.map(([key,label,time])=>'<label class="itinerarySlot"><span>'+label+' <small>'+time+'</small></span><textarea rows="2" data-day="'+i+'" data-slot="'+key+'" maxlength="220">'+esc(day[key]||'')+'</textarea></label>').join('')+'</div><p class="itineraryHint">Travel buffer and rest time are intentionally left between activities. Confirm local opening hours and access before visiting.</p></article>').join('')+'<div class="actions"><button type="button" class="primary" id="saveItinerary">Save itinerary edits</button><button type="button" id="resetItinerary">Restore suggested plan</button></div><p id="itineraryStatus" class="sub" aria-live="polite">Edit any activity above. Your changes are kept with this trip when you save it.</p>';
  $('saveItinerary').onclick=async()=>{
   $('itinerary').querySelectorAll('textarea[data-day]').forEach(field=>{const d=Number(field.dataset.day),slot=field.dataset.slot;if(t.itinerary[d])t.itinerary[d][slot]=field.value.trim()});
-  const all=trips(),idx=all.findIndex(x=>x.id===t.id);if(idx>=0){all[idx]={...all[idx],itinerary:t.itinerary};saveTrips(all)}
-  const status=$('itineraryStatus');status.textContent='Itinerary edits saved on this device.'; 
+  const all=trips(),idx=all.findIndex(x=>x.id===t.id);if(idx>=0)all[idx]={...all[idx],...t};else all.unshift(t);saveTrips(all);renderSaved();
+  const status=$('itineraryStatus');status.textContent='Trip and itinerary saved on this device.'; 
   if(window.wwClient&&window.wwSession?.user){const ok=await upsertTrip(t);if(ok)status.textContent='Itinerary edits saved on this device and synced to your account.'}
  };
  $('resetItinerary').onclick=()=>{t.itinerary=buildDayPlan(t);renderDayPlan(t)};
