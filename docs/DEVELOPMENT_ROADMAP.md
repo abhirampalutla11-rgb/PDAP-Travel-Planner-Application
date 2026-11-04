@@ -98,6 +98,7 @@ The application currently has no package manifest or build pipeline. Keep the in
 - Updated the service-worker cache version and precache list so the extracted JavaScript modules remain available to the offline app shell.
 - Added destination-aware trip cost estimates using the curated destination dataset, with a clearly described general fallback and a rough Guntur-distance transport proxy. These values are planning estimates, not live fares or quotes.
 - Added an interactive budget optimizer with Economy, Standard and Comfort scenarios, potential savings by category, budget-gap messaging, and an action to apply the Economy estimate. Scenario percentages are assumptions and are labelled as such.
+- Added a destination-aware day-by-day itinerary with morning, afternoon and evening activity suggestions, deliberate travel/rest buffers, editable activity fields, local saving, and Supabase itinerary persistence through the existing trips record. Opening hours and access are not represented as verified.
 
 ## Definition of done for each change
 
