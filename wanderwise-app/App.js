@@ -152,8 +152,9 @@ export default function App() {
     try {
       const start = /^\\d{4}-\\d{2}-\\d{2}$/.test(trip.date || "") ? trip.date : new Date().toISOString().slice(0, 10);
       const endDate = new Date(start + "T00:00:00"); endDate.setDate(endDate.getDate() + Math.max(0, trip.days - 1));
+      const end = endDate.getFullYear() + "-" + String(endDate.getMonth()+1).padStart(2,"0") + "-" + String(endDate.getDate()).padStart(2,"0");
       const costs = { transport: trip.travel * trip.people, lodging: trip.stay * Math.max(0, trip.days - 1), food: trip.food * trip.people * trip.days, activities: trip.extras, total: trip.total };
-      const row = { user_id: session.user.id, destination: trip.destination, start_date: start, end_date: endDate.toISOString().slice(0, 10), travellers: trip.people, budget: trip.budgetLimit, interests: [], itinerary: [], costs };
+      const row = { user_id: session.user.id, destination: trip.destination, start_date: start, end_date: end, travellers: trip.people, budget: trip.budgetLimit, interests: [], itinerary: [], costs };
       if (trip.cloudId) row.id = trip.cloudId;
       const { data, error } = await supabase.from("trips").upsert(row).select().single();
       if (error) throw error;
@@ -173,7 +174,7 @@ export default function App() {
     const safePeople = Math.max(1, Math.min(20, Math.floor(Number(people) || 1)));
     const costs = [travel, stay, food, extras, budgetLimit].map(Number);
     if (costs.some(value => !Number.isFinite(value) || value < 0)) return Alert.alert("Check your budget", "Enter valid amounts. Costs and budget cannot be negative.");
-    const trip = { id: editingId || String(Date.now()), title: tripTitle.trim() || destination.trim(), destination: destination.trim(), days: safeDays, people: safePeople, travel: Number(travel)||0, stay: Number(stay)||0, food: Number(food)||0, extras: Number(extras)||0, budgetLimit: Number(budgetLimit)||0, total, date: tripDate, createdAt: new Date().toISOString() };
+    const trip = { id: editingId || String(Date.now()), cloudId: editingId && /^[0-9a-f-]{36}$/i.test(editingId) ? editingId : saved.find(x => x.id === editingId)?.cloudId, title: tripTitle.trim() || destination.trim(), destination: destination.trim(), days: safeDays, people: safePeople, travel: Number(travel)||0, stay: Number(stay)||0, food: Number(food)||0, extras: Number(extras)||0, budgetLimit: Number(budgetLimit)||0, total, date: tripDate, createdAt: new Date().toISOString() };
     const nextTrips = editingId ? saved.map(x => x.id === editingId ? trip : x) : [trip, ...saved];
     persistTrips(nextTrips);
     if (session?.user) saveTripToCloud(trip).then(cloudTrip => persistTrips(nextTrips.map(x => x.id === trip.id ? cloudTrip : x)));
@@ -203,6 +204,7 @@ export default function App() {
     });
     setExpenseName(""); setExpenseAmount("");
   };
+  const removeExpense = id => Alert.alert("Delete expense?", "This removes the expense from this device and, if synced, your account.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: async () => { const expense = expenses.find(x => x.id === id); if (session?.user && expense && /^[0-9a-f-]{36}$/i.test(String(expense.id))) { const { error } = await supabase.from("expenses").delete().eq("id", expense.id); if (error) return Alert.alert("Delete failed", error.message); } persistExpenses(expenses.filter(x => x.id !== id)); } }]);
   const removeTrip = id => Alert.alert("Delete saved trip?", "This removes the trip from this device and, if synced, your account.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: async () => { const trip = saved.find(x => x.id === id); if (session?.user && trip?.cloudId) { const { error } = await supabase.from("trips").delete().eq("id", trip.cloudId); if (error) return Alert.alert("Delete failed", error.message); } persistTrips(saved.filter(x => x.id !== id)); } }]);
   const t = key => (UI_TEXT[language] || UI_TEXT.English)[key] || key;
   const nav = [["Dashboard",t("home")],["Explore",t("explore")],["Discover",t("discover")],["For You",t("forYou")],["Plan",t("plan")],["Stays",t("stays")],["Expenses",t("expenses")],["Groups","♧ Groups"],["Analytics",t("analytics")],["Saved",t("saved")]];
@@ -290,7 +292,7 @@ export default function App() {
         <View style={styles.metrics}><Metric label="Logged entries" value={String(expenses.length)} icon="🧾"/><Metric label="Total logged" value={money(expenseSpend)} icon="₹"/></View>
         <View style={styles.card}><Field label="Expense name" value={expenseName} onChangeText={setExpenseName} placeholder="e.g. Bus tickets"/><Field label="Amount (₹)" value={expenseAmount} onChangeText={setExpenseAmount} keyboardType="decimal-pad" placeholder="0"/><Button title="＋ Add expense" primary onPress={addExpense}/></View>
         <Heading eyebrow="RECENT ACTIVITY" title="Your expenses"/>
-        {!expenses.length?<Empty title="No expenses yet" text="Add your first cost above to start tracking spending."/>:expenses.map(e=><View key={e.id} style={styles.savedCard}><View style={{flex:1}}><Text style={styles.destinationName}>{e.name}</Text><Text style={styles.destinationNote}>{new Date(e.date).toLocaleDateString()}</Text></View><Text style={styles.destinationBudget}>{money(e.amount)}</Text><Pressable onPress={()=>persistExpenses(expenses.filter(x=>x.id!==e.id))} style={styles.removeButton}><Text style={{color:"#B42318",fontWeight:"800"}}>Delete</Text></Pressable></View>)}
+        {!expenses.length?<Empty title="No expenses yet" text="Add your first cost above to start tracking spending."/>:expenses.map(e=><View key={e.id} style={styles.savedCard}><View style={{flex:1}}><Text style={styles.destinationName}>{e.name}</Text><Text style={styles.destinationNote}>{new Date(e.date).toLocaleDateString()}</Text></View><Text style={styles.destinationBudget}>{money(e.amount)}</Text><Pressable onPress={()=>removeExpense(e.id)} style={styles.removeButton}><Text style={{color:"#B42318",fontWeight:"800"}}>Delete</Text></Pressable></View>)}
       </>}
       {tab==="Groups" && <>
         <Heading eyebrow="PLAN TOGETHER" title="Group trip planner" subtitle="Keep a simple traveller list and assign planning roles. This first version is stored on this device; shared invitations and live collaboration are still being built."/>
