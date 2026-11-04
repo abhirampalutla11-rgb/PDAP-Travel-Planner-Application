@@ -128,6 +128,7 @@ export default function App() {
   const [groupName, setGroupName] = useState("Weekend getaway");
   const [memberName, setMemberName] = useState("");
   const [memberRole, setMemberRole] = useState("Traveller");
+  const [joinGroupCode, setJoinGroupCode] = useState("");
   const [groupMembers, setGroupMembers] = useState([]);
   const [session, setSession] = useState(null);
   const [authEmail, setAuthEmail] = useState("");
@@ -366,6 +367,30 @@ export default function App() {
   const persistExpenses = async next => { setExpenses(next); try { await encryptedStorage.setItem("wanderwise.expenses.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Expenses could not be saved on this device."); } };
   const persistGroupMembers = async next => { setGroupMembers(next); try { await encryptedStorage.setItem("wanderwise.groupMembers.v1", JSON.stringify(next)); } catch { Alert.alert("Storage unavailable", "Group list could not be saved on this device."); } };
   const addGroupMember = () => { const name=memberName.trim(); if(!name) return Alert.alert("Add a member","Enter a name first."); if(groupMembers.some(m=>m.name.toLowerCase()===name.toLowerCase())) return Alert.alert("Already added","This member is already in the group."); persistGroupMembers([...groupMembers,{id:String(Date.now()),name,role:memberRole}]); setMemberName(""); };
+  const shareGroupInvite = async () => {
+    try {
+      const payload = { app: "WanderWiseGroupInvite", version: 1, groupName, members: groupMembers, createdAt: new Date().toISOString() };
+      const code = naclUtil.encodeBase64(naclUtil.decodeUTF8(JSON.stringify(payload)));
+      await Share.share({ title: "Join my WanderWise trip", message: `Join my WanderWise travel group: ${groupName}\\n\\nInvite code (copy the full code into Groups > Join with invite code):\\nWWGROUP1:${code}\\n\\nThis invite shares the group name and current member roster. It does not grant access to private account data.` });
+    } catch { Alert.alert("Invite unavailable", "Could not open the Android share sheet."); }
+  };
+  const joinGroupFromCode = async () => {
+    try {
+      const raw = joinGroupCode.trim();
+      const encoded = raw.startsWith("WWGROUP1:") ? raw.slice(9).trim() : raw;
+      const payload = JSON.parse(naclUtil.encodeUTF8(naclUtil.decodeBase64(encoded)));
+      if (payload?.app !== "WanderWiseGroupInvite" || payload?.version !== 1 || !Array.isArray(payload.members) || typeof payload.groupName !== "string") throw new Error("This invite code is not valid.");
+      const validMembers = payload.members.filter(m => m && typeof m.name === "string" && typeof m.role === "string").map(m => ({ id: String(m.id || Date.now() + Math.random()), name: m.name.slice(0, 60), role: ["Organizer","Planner","Traveller","Viewer"].includes(m.role) ? m.role : "Traveller" }));
+      const merged = [...groupMembers];
+      for (const member of validMembers) if (!merged.some(existing => existing.name.toLowerCase() === member.name.toLowerCase())) merged.push(member);
+      await persistGroupMembers(merged);
+      setGroupName(payload.groupName.slice(0, 80));
+      setJoinGroupCode("");
+      Alert.alert("Group joined", `Joined "${payload.groupName}" and imported ${validMembers.length} shared member record(s). This is a portable invite; live shared updates are not enabled yet.`);
+    } catch (error) {
+      Alert.alert("Could not join group", error?.message || "Check that you copied the complete invite code.");
+    }
+  };
   const exportLocalData = async () => { try { await Share.share({title:"WanderWise data export",message:JSON.stringify({app:"WanderWise",exportedAt:new Date().toISOString(),savedTrips:saved,expenses,groupName,groupMembers},null,2)}); } catch { Alert.alert("Export unavailable","Could not open the Android share sheet."); } };
   const openMap = place => {
     const query = place?.lat && place?.lon ? place.lat + "," + place.lon : encodeURIComponent(place?.name || destination);
