@@ -251,7 +251,7 @@ function setupWorkspace(){
    const originName=origin.value,originPoint=originCities[originName],finishName=destination.value,finish=coordsFor(finishName);
    if(!originPoint||!finish){summary.textContent='Choose a supported starting city and a destination.';return}
    const chosen=[stop1.value,stop2.value].filter(Boolean);
-   if(chosen.includes(finishName)||new Set(chosen).size!==chosen.length){summary.textContent='Choose different places for each stop and final destination.';return}
+   if(chosen.includes(finishName)||chosen.includes(originName)||new Set(chosen).size!==chosen.length){summary.textContent='Choose different places for each stop, starting city and final destination.';return}
    const points=[{name:originName.replace(/\b\w/g,c=>c.toUpperCase()),coord:originPoint},...chosen.map(n=>({name:n,coord:coordsFor(n)})),{name:finishName,coord:finish}];
    if(points.some(p=>!p.coord)){summary.textContent='One of the selected places has no mapped coordinates yet.';return}
    summary.textContent='Finding a road route…';
