@@ -11,6 +11,7 @@ import * as Crypto from "expo-crypto";
 import * as SecureStore from "expo-secure-store";
 import nacl from "tweetnacl";
 import naclUtil from "tweetnacl-util";
+import { WebView } from "react-native-webview";
 
 const GREEN = "#176B55", MINT = "#DFF4E9", ORANGE = "#F1A35B";
 const INK = "#172B3A", MUTED = "#60717D", LINE = "#E4EAE6";
@@ -148,6 +149,10 @@ export default function App() {
   const [miniDays, setMiniDays] = useState("2");
   const [miniPlan, setMiniPlan] = useState([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [routeStopNames, setRouteStopNames] = useState([]);
+  const [routeGeometry, setRouteGeometry] = useState([]);
+  const [routeStatus, setRouteStatus] = useState("Choose at least two stops to preview a route.");
+  const [routeSummary, setRouteSummary] = useState(null);
 
   useEffect(() => {
     encryptedStorage.multiGet([KEY, "wanderwise.expenses.v1", "wanderwise.language.v1", "wanderwise.groupMembers.v1", "wanderwise.notifications.v1"]).then(rows => {
@@ -166,6 +171,53 @@ export default function App() {
     });
     return () => authListener.subscription.unsubscribe();
   }, []);
+  useEffect(() => {
+    if (routeStopNames.length < 2) {
+      setRouteGeometry([]);
+      setRouteSummary(null);
+      setRouteStatus("Choose at least two stops to preview a route.");
+      return;
+    }
+    let active = true;
+    const byName = new Map(destinations.map(place => [place.name, place]));
+    const remaining = routeStopNames.map(name => byName.get(name)).filter(Boolean);
+    const ordered = remaining.length ? [remaining.shift()] : [];
+    const distance = (a, b) => {
+      const rad = n => n * Math.PI / 180;
+      const dLat = rad(b.lat - a.lat), dLon = rad(b.lon - a.lon);
+      const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon / 2) ** 2;
+      return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+    };
+    while (remaining.length && ordered.length) {
+      const last = ordered[ordered.length - 1];
+      let nearestIndex = 0, nearestDistance = Infinity;
+      remaining.forEach((place, index) => {
+        const d = distance(last, place);
+        if (d < nearestDistance) { nearestDistance = d; nearestIndex = index; }
+      });
+      ordered.push(remaining.splice(nearestIndex, 1)[0]);
+    }
+    const coords = ordered.map(place => `${place.lon},${place.lat}`).join(";");
+    setRouteStatus("Finding a road route between your stops…");
+    fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`)
+      .then(response => { if (!response.ok) throw new Error("Route service unavailable"); return response.json(); })
+      .then(data => {
+        if (!active) return;
+        const route = data?.routes?.[0];
+        if (!route) throw new Error("No drivable route was returned for these stops.");
+        setRouteGeometry(route.geometry?.coordinates || []);
+        setRouteSummary({ distance: route.distance, duration: route.duration, stops: ordered });
+        setRouteStatus("Route preview ready. Stop order is arranged to reduce backtracking.");
+      })
+      .catch(error => {
+        if (!active) return;
+        setRouteGeometry([]);
+        setRouteSummary(null);
+        setRouteStatus(error.message + ". The map will still show your selected places.");
+      });
+    return () => { active = false; };
+  }, [routeStopNames.join("|")]);
+
   const total = useMemo(() => {
     const d = Math.max(1, Math.min(30, Math.floor(Number(days) || 1))), p = Math.max(1, Math.min(20, Math.floor(Number(people) || 1)));
     return (Number(travel) || 0) * p + (Number(stay) || 0) * Math.max(0, d - 1) + (Number(food) || 0) * d * p + (Number(extras) || 0);
@@ -370,7 +422,7 @@ export default function App() {
   const removeExpense = id => Alert.alert("Delete expense?", "This removes the expense from this device and, if synced, your account.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: async () => { const expense = expenses.find(x => x.id === id); if (session?.user && expense && /^[0-9a-f-]{36}$/i.test(String(expense.id))) { const { error } = await supabase.from("expenses").delete().eq("id", expense.id); if (error) return Alert.alert("Delete failed", error.message); } persistExpenses(expenses.filter(x => x.id !== id)); } }]);
   const removeTrip = id => Alert.alert("Delete saved trip?", "This removes the trip from this device and, if synced, your account.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: async () => { const trip = saved.find(x => x.id === id); if (session?.user && trip?.cloudId) { const { error } = await supabase.from("trips").delete().eq("id", trip.cloudId); if (error) return Alert.alert("Delete failed", error.message); } persistTrips(saved.filter(x => x.id !== id)); } }]);
   const t = key => (UI_TEXT[language] || UI_TEXT.English)[key] || key;
-  const nav = [["Dashboard",t("home")],["Explore",t("explore")],["Discover",t("discover")],["For You",t("forYou")],["Plan",t("plan")],["Stays",t("stays")],["Expenses",t("expenses")],["Groups","♧ Groups"],["Analytics",t("analytics")],["Saved",t("saved")]];
+  const nav = [["Dashboard",t("home")],["Explore",t("explore")],["Discover",t("discover")],["For You",t("forYou")],["Plan",t("plan")],["Stays",t("stays")],["Expenses",t("expenses")],["Groups","♧ Groups"],["Routes","⌖ Routes"],["Analytics",t("analytics")],["Saved",t("saved")]];
   const tripSpend = saved.reduce((sum,t)=>sum+(Number(t.total)||0),0);
   const expenseSpend = expenses.reduce((sum,e)=>sum+(Number(e.amount)||0),0);
   const selected = destinations.find(d=>d.name===destination);
@@ -495,6 +547,41 @@ export default function App() {
         {!groupMembers.length?<Empty title="Your travel crew starts here" text="Add the people travelling with you and choose their planning roles."/>:groupMembers.map(member=><View key={member.id} style={styles.savedCard}><View style={{flex:1}}><Text style={styles.destinationName}>{member.name}</Text><Text style={styles.destinationNote}>{member.role}</Text></View><Pressable onPress={()=>persistGroupMembers(groupMembers.filter(m=>m.id!==member.id))} style={styles.removeButton}><Text style={{color:"#B42318",fontWeight:"800"}}>Remove</Text></Pressable></View>)}
         <View style={styles.tipCard}><Text style={styles.tipTitle}>🔒 Privacy note</Text><Text style={styles.sectionCopy}>No contacts or location are accessed. Names and roles stay in local app storage until you export or clear the app data.</Text></View>
       </>}
+      {tab==="Routes" && <>
+        <Heading eyebrow="FREE MAPS & ROUTE PREVIEW" title="Plan a multi-stop route" subtitle="Choose places from the WanderWise destination list. We arrange stops to reduce backtracking and draw a road-route preview."/>
+        <View style={styles.card}>
+          <Text style={styles.formHeading}>1. Choose your stops ({routeStopNames.length}/6)</Text>
+          <Text style={styles.sectionCopy}>Select up to six destinations. The first selected place is your starting point.</Text>
+          <View style={{flexDirection:"row",flexWrap:"wrap",gap:7}}>
+            {destinations.map(place => {
+              const active = routeStopNames.includes(place.name);
+              const disabled = !active && routeStopNames.length >= 6;
+              return <Pressable key={place.name} disabled={disabled} onPress={() => setRouteStopNames(current => active ? current.filter(name => name !== place.name) : [...current, place.name])} style={[styles.chip,active&&styles.chipActive,disabled&&{opacity:0.35}]}>
+                <Text style={[styles.chipText,active&&styles.chipTextActive]}>{active ? "✓ " : ""}{place.name}</Text>
+              </Pressable>;
+            })}
+          </View>
+          <View style={{flexDirection:"row",flexWrap:"wrap",gap:8,marginTop:12}}>
+            <Button title="Clear stops" onPress={() => setRouteStopNames([])}/>
+            <Button title="Use current trip destination" onPress={() => setRouteStopNames([destination])}/>
+          </View>
+        </View>
+        <View style={styles.card}>
+          <Text style={styles.formHeading}>2. Route map</Text>
+          <Text style={styles.sectionCopy}>{routeStatus}</Text>
+          {!!routeSummary&&<View style={styles.metrics}><Metric label="Road distance" value={(routeSummary.distance/1000).toFixed(1)+" km"} icon="🛣️"/><Metric label="Estimated drive" value={Math.max(1,Math.round(routeSummary.duration/60))+" min"} icon="⏱️"/></View>}
+          {!!routeSummary&&routeSummary.stops.map((place,index)=><View key={place.name} style={styles.costLine}><Text style={styles.destinationName}>{index+1}. {place.name}</Text><Text style={styles.destinationRegion}>{place.region}</Text></View>)}
+          <WebView
+            originWhitelist={["*"]}
+            javaScriptEnabled
+            domStorageEnabled
+            style={{height:340,borderRadius:14,overflow:"hidden",backgroundColor:"#E8F0EA"}}
+            source={{html: buildRouteMapHtml(routeStopNames.map(name => destinations.find(place => place.name === name)).filter(Boolean), routeGeometry)}}
+          />
+          <Text style={styles.disclaimer}>Map © OpenStreetMap contributors. Road-route estimates use the community OSRM demo service and may be unavailable or inaccurate. Check road conditions and signs before travel.</Text>
+          <Button title="Open this route in Google Maps ↗" primary onPress={() => openMultiStopRoute(routeSummary?.stops || routeStopNames.map(name => destinations.find(place => place.name === name)).filter(Boolean))}/>
+        </View>
+      </>}
       {tab==="Analytics" && <>
         <Heading eyebrow="YOUR TRAVEL NUMBERS" title="Trip insights" subtitle="A local summary of saved trip estimates and expense entries on this device."/>
         <View style={styles.metrics}><Metric label="Saved trips" value={String(saved.length)} icon="🧳"/><Metric label="Estimated trip spend" value={money(tripSpend)} icon="🗺️"/><Metric label="Logged expenses" value={money(expenseSpend)} icon="🧾"/><Metric label="Average trip estimate" value={money(saved.length?tripSpend/saved.length:0)} icon="📊"/></View>
@@ -520,6 +607,27 @@ export default function App() {
         <Text style={styles.sectionCopy}>Your local copy and account session are encrypted on this device with a device-held key. Account sync uses encrypted HTTPS communication and the same Supabase project as the WanderWise website.</Text>
         <Text style={styles.sectionCopy}>Estimates are indicative and are not live prices.</Text><Button title="Export my data ↗" onPress={exportLocalData}/><Text style={styles.sectionCopy}>Export includes saved trips, expenses, and the local group roster.</Text><Text style={styles.sectionCopy}>Location access is not requested or collected by this version.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearTrips}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearExpenses}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></ScrollView></View>}
   </SafeAreaView>;
+}
+function buildRouteMapHtml(stops, geometry) {
+  const safeStops = JSON.stringify(stops.map(place => ({ name: place.name, lat: place.lat, lon: place.lon }))).replace(/</g, "\\u003c");
+  const safeGeometry = JSON.stringify(geometry || []).replace(/</g, "\\u003c");
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><style>html,body,#map{height:100%;margin:0;background:#e8f0ea;font-family:Arial} .leaflet-control-attribution{font-size:9px}</style></head><body><div id="map"></div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
+const stops=${safeStops};const coords=${safeGeometry};const map=L.map('map').setView([20.5,78.9],5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+const bounds=[];stops.forEach((p,i)=>{const ll=[p.lat,p.lon];bounds.push(ll);L.marker(ll).addTo(map).bindPopup((i+1)+'. '+p.name);});
+if(coords.length>1){const line=L.polyline(coords.map(c=>[c[1],c[0]]),{color:'#176B55',weight:5,opacity:.85}).addTo(map);line.getLatLngs().forEach(p=>bounds.push([p.lat,p.lng]));}
+if(bounds.length>1)map.fitBounds(bounds,{padding:[24,24]});else if(bounds.length===1)map.setView(bounds[0],10);
+</script></body></html>`;
+}
+function openMultiStopRoute(stops) {
+  if (!stops || !stops.length) return Alert.alert("Choose stops", "Select at least one destination first.");
+  const origin = stops[0];
+  const destination = stops[stops.length - 1];
+  const waypoints = stops.slice(1, -1).map(place => `${place.lat},${place.lon}`).join("/");
+  const url = stops.length === 1
+    ? `https://www.google.com/maps/search/?api=1&query=${origin.lat},${origin.lon}`
+    : `https://www.google.com/maps/dir/?api=1&origin=${origin.lat},${origin.lon}&destination=${destination.lat},${destination.lon}&waypoints=${waypoints}&travelmode=driving`;
+  Linking.openURL(url).catch(() => Alert.alert("Maps unavailable", "Could not open the map app on this device."));
 }
 function Metric({label,value,icon}) { return <View style={styles.metric}><Text style={{fontSize:22}}>{icon}</Text><Text style={styles.metricLabel}>{label}</Text><Text style={styles.metricValue}>{value}</Text></View>; }
 function DestinationCard({item,onPress,detailed=false}) { return <Pressable onPress={onPress} style={styles.destinationCard}><View style={styles.destinationIcon}><Text style={{fontSize:27}}>{item.emoji}</Text></View><View style={{flex:1}}><Text style={styles.destinationName}>{item.name}</Text><Text style={styles.destinationRegion}>{item.region} · {item.category}</Text><Text style={styles.destinationNote}>{item.note}</Text>{detailed&&<Text style={styles.destinationNote}>Highlights: {item.highlights}</Text>}<Text style={styles.destinationBudget}>Indicative budget: {item.budget}/person</Text><Text style={styles.inlineAction}>Tap to plan →</Text></View><Text style={styles.chevron}>›</Text></Pressable>; }
