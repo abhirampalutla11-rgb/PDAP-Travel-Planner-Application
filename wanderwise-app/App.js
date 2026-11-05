@@ -16,8 +16,9 @@ import { WebView } from "react-native-webview";
 function Text({ style, ...props }) {
   const flatStyle = StyleSheet.flatten(style) || {};
   const fontSize = Number(flatStyle.fontSize) || 14;
-  const safeLineHeight = Math.max(Number(flatStyle.lineHeight) || 0, Math.ceil(fontSize * 1.4));
-  return <NativeText {...props} includeFontPadding={false} style={[style, { flexShrink: 1, lineHeight: safeLineHeight }]} />;
+  // Keep Android's font padding so Telugu, Tamil and other Indic glyph marks are not clipped.
+  const safeLineHeight = Math.max(Number(flatStyle.lineHeight) || 0, Math.ceil(fontSize * 1.5));
+  return <NativeText {...props} includeFontPadding style={[style, { flexShrink: 1, lineHeight: safeLineHeight }]} />;
 }
 const GREEN = "#176B55", MINT = "#DFF4E9", ORANGE = "#F1A35B";
 const INK = "#172B3A", MUTED = "#60717D", LINE = "#E4EAE6";
@@ -705,7 +706,7 @@ function Metric({label,value,icon}) { return <View style={styles.metric}><Text s
 function DestinationCard({item,onPress,detailed=false}) { return <Pressable onPress={onPress} style={styles.destinationCard}><View style={styles.destinationIcon}><Text style={{fontSize:27}}>{item.emoji}</Text></View><View style={{flex:1}}><Text style={styles.destinationName}>{item.name}</Text><Text style={styles.destinationRegion}>{item.region} · {item.category}</Text><Text style={styles.destinationNote}>{item.note}</Text>{detailed&&<Text style={styles.destinationNote}>Highlights: {item.highlights}</Text>}<Text style={styles.destinationBudget}>Indicative budget: {item.budget}/person</Text><Text style={styles.inlineAction}>Tap to plan →</Text></View><Text style={styles.chevron}>›</Text></Pressable>; }
 function Empty({title,text,action,onPress}) { return <View style={styles.empty}><Text style={{fontSize:38}}>🧳</Text><Text style={styles.emptyTitle}>{title}</Text><Text style={styles.sectionCopy}>{text}</Text>{!!action&&<Button title={action} primary onPress={onPress}/>}</View>; }
 const styles = StyleSheet.create({
- safe:{flex:1,backgroundColor:"#F5F7F4"}, header:{backgroundColor:GREEN,paddingHorizontal:16,paddingVertical:12,flexDirection:"row",alignItems:"center",gap:11},
+ safe:{flex:1,backgroundColor:"#F5F7F4"}, header:{backgroundColor:GREEN,paddingHorizontal:16,paddingTop:(StatusBar.currentHeight||0)+12,paddingBottom:12,flexDirection:"row",alignItems:"center",gap:11},
  brandIcon:{width:44,height:44,borderRadius:14,backgroundColor:"#FFFFFF20",alignItems:"center",justifyContent:"center"},brandCompass:{width:30,height:30,borderRadius:15,borderWidth:2,borderColor:MINT,alignItems:"center",justifyContent:"center"},brandNeedle:{width:0,height:0,borderLeftWidth:6,borderRightWidth:6,borderBottomWidth:19,borderLeftColor:"transparent",borderRightColor:"transparent",borderBottomColor:ORANGE,transform:[{rotate:"35deg"}]},brand:{color:"#FFFFFF",fontSize:23,fontWeight:"900",letterSpacing:-.8},brandAccent:{color:ORANGE},tagline:{color:"#DFF4E9",fontSize:11,fontWeight:"600",marginTop:-1},
  settingsButton:{padding:9,backgroundColor:"#FFFFFF20",borderRadius:12},navScroll:{flexGrow:0,backgroundColor:"#FFFFFF",borderBottomWidth:1,borderBottomColor:LINE},tabs:{paddingHorizontal:10,paddingVertical:8,gap:6,alignItems:"center"},
  tab:{paddingVertical:11,paddingHorizontal:13,alignItems:"center",borderRadius:11,backgroundColor:"#F8FAF8"},activeTab:{backgroundColor:MINT},tabText:{fontSize:12,color:MUTED,fontWeight:"700"},activeTabText:{color:GREEN},
