@@ -1,0 +1,4 @@
+project_id = "hmjtzyakidwtkzhhbgzd"
+
+[functions.wanderwise-ai]
+verify_jwt = true
