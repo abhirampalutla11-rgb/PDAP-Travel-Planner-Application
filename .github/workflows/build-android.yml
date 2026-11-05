@@ -8,6 +8,7 @@ on:
     paths:
       - "wanderwise-app/**"
       - ".github/workflows/build-android.yml"
+      - "supabase/**"
   push:
     paths:
       - "wanderwise-app/**"
