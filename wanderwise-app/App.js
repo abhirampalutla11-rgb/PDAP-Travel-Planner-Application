@@ -157,6 +157,9 @@ export default function App() {
   const [miniDestination, setMiniDestination] = useState("");
   const [miniDays, setMiniDays] = useState("2");
   const [miniPlan, setMiniPlan] = useState([]);
+  const [aiMessages, setAiMessages] = useState([{ role: "assistant", content: "Hi! I’m your WanderWise travel companion. Tell me where you want to go, your dates, group size and budget. I can help shape a realistic plan." }]);
+  const [aiInput, setAiInput] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [routeStopNames, setRouteStopNames] = useState([]);
   const [routeGeometry, setRouteGeometry] = useState([]);
@@ -351,6 +354,42 @@ export default function App() {
     const p = Math.max(1, Math.min(20, Number(people) || 1)), d = Math.max(1, Math.min(30, Number(days) || 1));
     setAssistantResult("For " + p + " traveller(s) over " + d + " day(s): travel " + money(amount*.25) + " · stay " + money(amount*.25) + " · food " + money(amount*.30) + " · activities and buffer " + money(amount*.20) + ". Adjust these starter shares to match real quotes.");
   };
+  const sendAiMessage = async () => {
+    const message = aiInput.trim();
+    if (!message || aiBusy) return;
+    if (!session?.user) {
+      Alert.alert("Sign in to use your AI companion", "Open Settings and sign in with Google or email. This keeps Gemini requests tied to your WanderWise account.");
+      return;
+    }
+    const nextMessages = [...aiMessages, { role: "user", content: message }];
+    setAiMessages(nextMessages);
+    setAiInput("");
+    setAiBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("wanderwise-ai", {
+        body: {
+          message,
+          history: nextMessages.slice(-12, -1),
+          context: {
+            destination,
+            days,
+            travellers: people,
+            budget: budgetLimit,
+            currency: "INR",
+            language,
+            savedTripCount: saved.length
+          }
+        }
+      });
+      if (error) throw error;
+      if (!data?.reply) throw new Error("The AI service returned an empty response.");
+      setAiMessages(current => [...current, { role: "assistant", content: data.reply }]);
+    } catch (error) {
+      setAiMessages(current => [...current, { role: "assistant", content: "I couldn't reach the AI service just now. Please check your connection and try again. If this continues, the Gemini service may still be getting configured." }]);
+    } finally {
+      setAiBusy(false);
+    }
+  };
   const buildMiniPlan = () => {
     const place = miniDestination.trim() || destination.trim();
     if (!place) return Alert.alert("Add a destination", "Enter a destination for your mini itinerary.");
@@ -484,7 +523,7 @@ export default function App() {
   const removeExpense = id => Alert.alert("Delete expense?", "This removes the expense from this device and, if synced, your account.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: async () => { const expense = expenses.find(x => x.id === id); if (session?.user && expense && /^[0-9a-f-]{36}$/i.test(String(expense.id))) { const { error } = await supabase.from("expenses").delete().eq("id", expense.id); if (error) return Alert.alert("Delete failed", error.message); } persistExpenses(expenses.filter(x => x.id !== id)); } }]);
   const removeTrip = id => Alert.alert("Delete saved trip?", "This removes the trip from this device and, if synced, your account.", [{ text: "Cancel", style: "cancel" }, { text: "Delete", style: "destructive", onPress: async () => { const trip = saved.find(x => x.id === id); if (session?.user && trip?.cloudId) { const { error } = await supabase.from("trips").delete().eq("id", trip.cloudId); if (error) return Alert.alert("Delete failed", error.message); } persistTrips(saved.filter(x => x.id !== id)); } }]);
   const t = key => (UI_TEXT[language] || UI_TEXT.English)[key] || key;
-  const nav = [["Dashboard",t("home")],["Explore",t("explore")],["Discover",t("discover")],["For You",t("forYou")],["Plan",t("plan")],["Stays",t("stays")],["Expenses",t("expenses")],["Groups",t("groups")],["Routes",t("routes")],["Analytics",t("analytics")],["Saved",t("saved")]];
+  const nav = [["Dashboard",t("home")],["Explore",t("explore")],["Discover",t("discover")],["AI Companion","✦ AI"],["For You",t("forYou")],["Plan",t("plan")],["Stays",t("stays")],["Expenses",t("expenses")],["Groups",t("groups")],["Routes",t("routes")],["Analytics",t("analytics")],["Saved",t("saved")]];
   const tripSpend = saved.reduce((sum,t)=>sum+(Number(t.total)||0),0);
   const expenseSpend = expenses.reduce((sum,e)=>sum+(Number(e.amount)||0),0);
   const selected = destinations.find(d=>d.name===destination);
@@ -545,6 +584,19 @@ export default function App() {
         <Text style={styles.label}>TRAVEL STYLE</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap:8, paddingVertical:10}}>{["All","Nature","Beach","City","Culture","Spiritual"].map(c=><Pressable key={c} onPress={()=>setCategory(c)} style={[styles.chip,category===c&&styles.chipActive]}><Text style={[styles.chipText,category===c&&styles.chipTextActive]}>{c}</Text></Pressable>)}</ScrollView>
         <Text style={styles.sectionCopy}>{filtered.length} destination{filtered.length===1?"":"s"} match your selection.</Text>
         {filtered.map(item=><DestinationCard key={item.name} item={item} onPress={()=>openDestination(item.name)} detailed/>)}
+      </>}
+      {tab==="AI Companion" && <>
+        <Heading eyebrow="YOUR GEMINI-POWERED TRAVEL PARTNER" title="Ask WanderWise AI" subtitle="Plan smarter trips, compare budget options and refine your itinerary through conversation."/>
+        {!session?.user && <View style={styles.tipCard}><Text style={styles.tipTitle}>Sign in to start chatting</Text><Text style={styles.sectionCopy}>Your AI requests are securely connected to your WanderWise account. Open Settings to sign in with Google or email.</Text><Button title="Open account settings" primary onPress={()=>setShowSettings(true)}/></View>}
+        <View style={styles.aiChatCard}>
+          <View style={styles.aiHeader}><View style={styles.aiAvatar}><Text style={styles.aiAvatarText}>✦</Text></View><View style={{flex:1}}><Text style={styles.destinationName}>WanderWise AI</Text><Text style={styles.destinationRegion}>Powered by Google Gemini</Text></View><Text style={styles.aiStatus}>{aiBusy ? "Thinking…" : "Travel assistant"}</Text></View>
+          {aiMessages.map((item,index)=><View key={index} style={[styles.aiBubble,item.role==="user"&&styles.aiUserBubble]}><Text style={[styles.aiBubbleText,item.role==="user"&&styles.aiUserBubbleText]}>{item.content}</Text></View>)}
+          {aiBusy&&<Text style={styles.aiThinking}>Gemini is planning your next move…</Text>}
+          <TextInput value={aiInput} onChangeText={setAiInput} placeholder="Ask about destinations, itineraries or budgets…" placeholderTextColor="#91A099" style={styles.aiInput} multiline maxLength={1200}/>
+          <Button title={aiBusy ? "Thinking…" : "Send to WanderWise AI  ↗"} primary onPress={sendAiMessage}/>
+          <Text style={styles.aiDisclaimer}>AI suggestions are planning guidance, not confirmed bookings or live prices. Verify costs and availability before travelling.</Text>
+        </View>
+        <View style={styles.tipCard}><Text style={styles.tipTitle}>Try asking</Text><Text style={styles.sectionCopy}>“Plan a 2-day Araku trip for 3 friends under ₹8,000.”</Text><Text style={styles.sectionCopy}>“Make my Hyderabad itinerary cheaper.”</Text><Text style={styles.sectionCopy}>“Suggest a rainy-day alternative for my trip.”</Text></View>
       </>}
       {tab==="For You" && <>
         <Heading eyebrow="SMART BUDGET MATCHES" title="Trips that fit your budget" subtitle="Suggestions use the destinations already in WanderWise and indicative planning estimates, not live fares or availability."/>
@@ -725,5 +777,6 @@ const styles = StyleSheet.create({
  savedCard:{backgroundColor:"#FFFFFF",borderWidth:1,borderColor:LINE,borderRadius:15,padding:15,marginBottom:11,flexDirection:"row",alignItems:"center",gap:10},removeButton:{backgroundColor:"#FFF0EF",paddingHorizontal:11,paddingVertical:9,borderRadius:9},stayCard:{backgroundColor:"#FFFFFF",borderWidth:1,borderColor:LINE,borderRadius:16,padding:15,marginBottom:12,flexDirection:"row",gap:14,alignItems:"flex-start"},
  chip:{borderWidth:1,borderColor:LINE,backgroundColor:"#FFFFFF",paddingVertical:9,paddingHorizontal:14,borderRadius:22},chipActive:{backgroundColor:GREEN,borderColor:GREEN},chipText:{color:INK,fontSize:12,fontWeight:"700"},chipTextActive:{color:"#FFFFFF"},
  footer:{alignItems:"center",borderTopWidth:1,borderTopColor:LINE,marginTop:25,paddingTop:18},footerBrand:{color:GREEN,fontSize:16,fontWeight:"900",marginBottom:4},footerText:{color:MUTED,fontSize:10,marginTop:2,textAlign:"center"},
+ aiChatCard:{backgroundColor:"#FFFFFF",borderRadius:18,borderWidth:1,borderColor:LINE,padding:14,marginBottom:15},aiHeader:{flexDirection:"row",alignItems:"center",gap:10,paddingBottom:12,borderBottomWidth:1,borderBottomColor:LINE,marginBottom:12},aiAvatar:{width:36,height:36,borderRadius:18,backgroundColor:MINT,alignItems:"center",justifyContent:"center"},aiAvatarText:{color:GREEN,fontSize:22,fontWeight:"900"},aiStatus:{fontSize:10,color:GREEN,fontWeight:"800"},aiBubble:{alignSelf:"flex-start",maxWidth:"92%",backgroundColor:"#F1F5F2",borderRadius:14,padding:12,marginBottom:9},aiUserBubble:{alignSelf:"flex-end",backgroundColor:GREEN},aiBubbleText:{color:INK,fontSize:13,lineHeight:20},aiUserBubbleText:{color:"#FFFFFF"},aiThinking:{color:GREEN,fontSize:11,fontWeight:"700",marginBottom:8},aiInput:{backgroundColor:"#FBFCFA",borderWidth:1,borderColor:"#CCD8D1",borderRadius:12,paddingHorizontal:12,paddingVertical:11,minHeight:54,maxHeight:110,textAlignVertical:"top",color:INK,fontSize:14,lineHeight:20,marginTop:6,marginBottom:4},aiDisclaimer:{color:MUTED,fontSize:10,lineHeight:15,marginTop:10},
  modalBackdrop:{position:"absolute",top:0,bottom:0,left:0,right:0,backgroundColor:"#0008",justifyContent:"center",padding:22},modal:{backgroundColor:"#FFFFFF",borderRadius:20,padding:22}
 });
