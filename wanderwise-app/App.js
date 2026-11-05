@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ScrollView, View, Text: NativeText, TextInput, Pressable,
+  ScrollView, View, Text as NativeText, TextInput, Pressable,
   StyleSheet, StatusBar, Alert, Linking, Share
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
