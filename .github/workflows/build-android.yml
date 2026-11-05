@@ -65,3 +65,27 @@ jobs:
           name: wanderwise-preview-apk
           path: wanderwise-app/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
+
+      # Firebase distribution is enabled automatically after the Firebase secrets are added.
+      - name: Authenticate with Firebase
+        if: ${{ env.FIREBASE_APP_ID != '' && env.FIREBASE_SERVICE_ACCOUNT_JSON != '' }}
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      - name: Distribute APK through Firebase App Distribution
+        if: ${{ env.FIREBASE_APP_ID != '' && env.FIREBASE_SERVICE_ACCOUNT_JSON != '' }}
+        working-directory: .
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_TESTER_GROUPS: ${{ secrets.FIREBASE_TESTER_GROUPS }}
+        run: |
+          npm install --global firebase-tools
+          APK_PATH="wanderwise-app/android/app/build/outputs/apk/release/app-release.apk"
+          if [ -n "$FIREBASE_TESTER_GROUPS" ]; then
+            firebase appdistribution:distribute "$APK_PATH" --app "$FIREBASE_APP_ID" --release-notes "WanderWise Android preview build from GitHub Actions" --groups "$FIREBASE_TESTER_GROUPS"
+          else
+            firebase appdistribution:distribute "$APK_PATH" --app "$FIREBASE_APP_ID" --release-notes "WanderWise Android preview build from GitHub Actions"
+          fi
