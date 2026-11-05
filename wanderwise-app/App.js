@@ -494,7 +494,7 @@ export default function App() {
   const itineraryDays = Array.from({length:Math.max(1,Math.min(7,Number(days)||1))},(_,i)=>i+1);
   const recommended = destinations.map(place=>({place,estimate:Math.round(place.low*Math.max(1,Number(people)||1)/2)})).sort((a,b)=>a.estimate-b.estimate).filter(x=>budgetValue===0||x.estimate<=budgetValue);
 
-  return <SafeAreaView style={styles.safe}>
+  return <SafeAreaView edges={["top"]} style={styles.safe}>
     <StatusBar barStyle="light-content" backgroundColor={GREEN}/>
     <View style={styles.header}>
       <View style={styles.brandIcon}><View style={styles.brandCompass}><View style={styles.brandNeedle}/></View></View>
@@ -504,7 +504,7 @@ export default function App() {
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.navScroll} contentContainerStyle={styles.tabs}>
       {nav.map(([key,label])=><Pressable key={key} onPress={()=>setTab(key)} style={[styles.tab,tab===key&&styles.activeTab]}><Text style={[styles.tabText,tab===key&&styles.activeTabText]}>{label}{key==="Saved" ? " ("+saved.length+")" : ""}</Text></Pressable>)}
     </ScrollView>
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{flex:1,backgroundColor:"#F5F7F4"}} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       {tab==="Dashboard" && <>
         <View style={styles.hero}><Text style={styles.eyebrow}>YOUR TRAVEL CONSOLE</Text><Text style={styles.heroTitle}>Small budget.{ "\n" }Big memories.</Text><Text style={styles.heroCopy}>Make a plan, keep an eye on costs, and find your next getaway without losing sight of your budget.</Text><Button title="＋ Start planning" primary onPress={()=>setTab("Plan")}/></View>
         <Heading eyebrow="SMART TRAVEL TOOLS" title="A little help before you go" subtitle="Free planning helpers inspired by the WanderWise website."/>
@@ -707,7 +707,7 @@ function Metric({label,value,icon}) { return <View style={styles.metric}><Text s
 function DestinationCard({item,onPress,detailed=false}) { return <Pressable onPress={onPress} style={styles.destinationCard}><View style={styles.destinationIcon}><Text style={{fontSize:27}}>{item.emoji}</Text></View><View style={{flex:1}}><Text style={styles.destinationName}>{item.name}</Text><Text style={styles.destinationRegion}>{item.region} · {item.category}</Text><Text style={styles.destinationNote}>{item.note}</Text>{detailed&&<Text style={styles.destinationNote}>Highlights: {item.highlights}</Text>}<Text style={styles.destinationBudget}>Indicative budget: {item.budget}/person</Text><Text style={styles.inlineAction}>Tap to plan →</Text></View><Text style={styles.chevron}>›</Text></Pressable>; }
 function Empty({title,text,action,onPress}) { return <View style={styles.empty}><Text style={{fontSize:38}}>🧳</Text><Text style={styles.emptyTitle}>{title}</Text><Text style={styles.sectionCopy}>{text}</Text>{!!action&&<Button title={action} primary onPress={onPress}/>}</View>; }
 const styles = StyleSheet.create({
- safe:{flex:1,backgroundColor:"#F5F7F4"}, header:{backgroundColor:GREEN,paddingHorizontal:16,paddingVertical:12,flexDirection:"row",alignItems:"center",gap:11},
+ safe:{flex:1,backgroundColor:GREEN}, header:{backgroundColor:GREEN,paddingHorizontal:16,paddingVertical:12,flexDirection:"row",alignItems:"center",gap:11},
  brandIcon:{width:44,height:44,borderRadius:14,backgroundColor:"#FFFFFF20",alignItems:"center",justifyContent:"center"},brandCompass:{width:30,height:30,borderRadius:15,borderWidth:2,borderColor:MINT,alignItems:"center",justifyContent:"center"},brandNeedle:{width:0,height:0,borderLeftWidth:6,borderRightWidth:6,borderBottomWidth:19,borderLeftColor:"transparent",borderRightColor:"transparent",borderBottomColor:ORANGE,transform:[{rotate:"35deg"}]},brand:{color:"#FFFFFF",fontSize:23,fontWeight:"900",letterSpacing:-.8},brandAccent:{color:ORANGE},tagline:{color:"#DFF4E9",fontSize:11,fontWeight:"600",marginTop:-1},
  settingsButton:{padding:9,backgroundColor:"#FFFFFF20",borderRadius:12},navScroll:{flexGrow:0,backgroundColor:"#FFFFFF",borderBottomWidth:1,borderBottomColor:LINE},tabs:{paddingHorizontal:10,paddingVertical:8,gap:6,alignItems:"center"},
  tab:{minHeight:50,flexShrink:0,justifyContent:"center",paddingVertical:12,paddingHorizontal:13,alignItems:"center",borderRadius:11,backgroundColor:"#F8FAF8"},activeTab:{backgroundColor:MINT},tabText:{flexShrink:0,fontSize:12,lineHeight:22,color:MUTED,fontWeight:"700",textAlign:"center"},activeTabText:{color:GREEN},
