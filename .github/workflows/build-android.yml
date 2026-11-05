@@ -98,9 +98,8 @@ jobs:
         with:
           version: latest
       - name: Configure Gemini secret and deploy AI function
-        if: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' && secrets.SUPABASE_PROJECT_REF != '' && secrets.GEMINI_API_KEY != '' }}
+        if: ${{ env.SUPABASE_ACCESS_TOKEN != '' && env.GEMINI_API_KEY != '' }}
         working-directory: .
-        env:
         run: |
           supabase secrets set GEMINI_API_KEY="$GEMINI_API_KEY" --project-ref "$SUPABASE_PROJECT_REF"
           supabase functions deploy wanderwise-ai --project-ref "$SUPABASE_PROJECT_REF"
