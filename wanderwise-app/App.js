@@ -70,7 +70,8 @@ const authStorage = {
 };
 const encryptedStorage = {
   async getItem(key) {
-    const raw = await AsyncStorage.getItem(key);
+    const recoveryRaw = localStorageRecoveryNeeded ? await AsyncStorage.getItem(key + ".recovery-v2") : null;
+    const raw = recoveryRaw ?? await AsyncStorage.getItem(key);
     if (raw == null) return null;
     if (!raw.startsWith("wwenc1:")) {
       await this.setItem(key, raw);
@@ -95,7 +96,8 @@ const encryptedStorage = {
     const box = nacl.secretbox(naclUtil.decodeUTF8(String(value)), nonce, await getDeviceEncryptionKey());
     const payload = new Uint8Array(nonce.length + box.length);
     payload.set(nonce, 0); payload.set(box, nonce.length);
-    await AsyncStorage.setItem(key, "wwenc1:" + naclUtil.encodeBase64(payload));
+    const destinationKey = localStorageRecoveryNeeded ? key + ".recovery-v2" : key;
+    await AsyncStorage.setItem(destinationKey, "wwenc1:" + naclUtil.encodeBase64(payload));
   },
   async removeItem(key) { return AsyncStorage.removeItem(key); },
   async multiGet(keys) { return Promise.all(keys.map(async key => [key, await this.getItem(key)])); },
@@ -785,7 +787,7 @@ export default function App() {
         {!session?.user && <><Button title={authBusy ? "Opening Google…" : "Continue with Google"} primary onPress={handleGoogleSignIn}/><Text style={styles.sectionCopy}>or continue with email</Text><Field label="Email" value={authEmail} onChangeText={setAuthEmail} placeholder="you@example.com"/><Field label="Password" value={authPassword} onChangeText={setAuthPassword} placeholder="At least 6 characters"/><View style={{flexDirection:"row",flexWrap:"wrap",gap:8}}><Button title={authBusy ? "Please wait…" : authMode==="signup" ? "Create account" : "Sign in"} primary onPress={handleAuth}/><Button title={authMode==="signup" ? "I have an account" : "Create account"} onPress={()=>setAuthMode(authMode==="signup"?"signin":"signup")}/></View></>}
         {!!session?.user && <><Button title="Sync now ↻" onPress={()=>syncCloudData(session)}/><Button title="Sign out" danger onPress={signOut}/></>}
         <Text style={styles.sectionCopy}>{syncMessage}</Text>
-        <Text style={styles.sectionCopy}>Your local copy and account session are encrypted on this device with a device-held key. Account sync uses encrypted HTTPS communication and the same Supabase project as the WanderWise website.</Text>
+        <Text style={styles.sectionCopy}>Your local trip data is encrypted on this device. Your account session is stored in Android app-private storage, and account sync uses encrypted HTTPS communication with the same Supabase project as the WanderWise website.</Text>
         <Text style={styles.sectionCopy}>Estimates are indicative and are not live prices.</Text><Button title="Export my data ↗" onPress={exportLocalData}/><Text style={styles.sectionCopy}>Export includes saved trips, expenses, and the local group roster.</Text><Text style={styles.sectionCopy}>Location access is not requested or collected by this version.</Text><Button title="Clear all saved trips" danger onPress={()=>Alert.alert("Clear saved trips?","This permanently removes saved trips on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearTrips}])}/><Button title="Clear expense log" danger onPress={()=>Alert.alert("Clear expenses?","This removes all expense entries on this device.",[{text:"Cancel",style:"cancel"},{text:"Clear",style:"destructive",onPress:clearExpenses}])}/><Button title="Close" primary onPress={()=>setShowSettings(false)}/></ScrollView></View>}
   </SafeAreaView>;
 }
