@@ -120,6 +120,9 @@ function Button({ title, onPress, primary = false, danger = false }) {
 function Heading({ eyebrow, title, subtitle }) {
   return <View style={styles.pageIntro}><Text style={styles.eyebrow}>{eyebrow}</Text><Text style={styles.sectionTitle}>{title}</Text>{!!subtitle && <Text style={styles.sectionCopy}>{subtitle}</Text>}</View>;
 }
+let oauthCallbackInProgress = false;
+let lastOAuthCallbackUrl = "";
+
 export default function App() {
   const [tab, setTab] = useState("Dashboard");
   const [destination, setDestination] = useState("Araku Valley");
@@ -178,13 +181,25 @@ export default function App() {
     supabase.auth.getSession().then(({ data }) => { setSession(data.session || null); if (data.session) syncCloudData(data.session); });
     const handleOAuthRedirect = async url => {
       if (!url || !url.startsWith("wanderwise://auth/callback")) return;
+      // Android can deliver the same deep link through both getInitialURL and
+      // the URL event listener. Process a callback only once.
+      if (url === lastOAuthCallbackUrl || oauthCallbackInProgress) return;
+      oauthCallbackInProgress = true;
+      lastOAuthCallbackUrl = url;
       try {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+        const callback = new URL(url);
+        const callbackError = callback.searchParams.get("error_description") || callback.searchParams.get("error");
+        if (callbackError) throw new Error(callbackError);
+        const code = callback.searchParams.get("code");
+        if (!code) throw new Error("Google returned without an authorization code. Please try again.");
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) throw error;
         if (data?.session) setSyncMessage("Google sign-in successful. Syncing your WanderWise data…");
       } catch (error) {
         setSyncMessage("Google sign-in could not be completed.");
         Alert.alert("Google sign-in error", error?.message || "Please try again.");
+      } finally {
+        oauthCallbackInProgress = false;
       }
     };
     Linking.getInitialURL().then(handleOAuthRedirect).catch(() => {});
