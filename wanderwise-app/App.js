@@ -28,16 +28,45 @@ const SUPABASE_URL = "https://hmjtzyakidwtkzhhbgzd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_3dsWrDTOtIz6eWi_ndF4Qw_GJIUY8o6";
 const STORAGE_KEY = "wanderwise.device-encryption-key.v1";
 let deviceEncryptionKeyPromise = null;
+let localStorageRecoveryNeeded = false;
 const getDeviceEncryptionKey = () => {
   if (!deviceEncryptionKeyPromise) deviceEncryptionKeyPromise = (async () => {
-    let encoded = await SecureStore.getItemAsync(STORAGE_KEY);
+    let encoded = null;
+    try {
+      encoded = await SecureStore.getItemAsync(STORAGE_KEY);
+    } catch (error) {
+      // Android Keystore can invalidate a SecureStore entry after restore or
+      // emulator changes. Keep the encrypted AsyncStorage records untouched.
+      localStorageRecoveryNeeded = true;
+      try { await SecureStore.deleteItemAsync(STORAGE_KEY); } catch (_) {}
+    }
     if (!encoded) {
       encoded = naclUtil.encodeBase64(await Crypto.getRandomBytesAsync(nacl.secretbox.keyLength));
       await SecureStore.setItemAsync(STORAGE_KEY, encoded);
     }
-    return naclUtil.decodeBase64(encoded);
-  })();
+    const key = naclUtil.decodeBase64(encoded);
+    if (key.length !== nacl.secretbox.keyLength) throw new Error("Invalid local encryption key length.");
+    return key;
+  })().catch(error => {
+    deviceEncryptionKeyPromise = null;
+    throw error;
+  });
   return deviceEncryptionKeyPromise;
+};
+// Keep Supabase's PKCE verifier and session in Android's app-private storage.
+// This is independent from the device encryption key used for local trip data.
+const authStorage = {
+  async getItem(key) {
+    const value = await AsyncStorage.getItem(key);
+    if (value?.startsWith("wwenc1:")) {
+      // Discard only the obsolete encrypted auth entry, never trip/expense data.
+      await AsyncStorage.removeItem(key);
+      return null;
+    }
+    return value;
+  },
+  async setItem(key, value) { return AsyncStorage.setItem(key, value); },
+  async removeItem(key) { return AsyncStorage.removeItem(key); }
 };
 const encryptedStorage = {
   async getItem(key) {
@@ -47,12 +76,19 @@ const encryptedStorage = {
       await this.setItem(key, raw);
       return raw;
     }
-    const payload = naclUtil.decodeBase64(raw.slice(7));
-    const nonce = payload.slice(0, nacl.secretbox.nonceLength);
-    const box = payload.slice(nacl.secretbox.nonceLength);
-    const clear = nacl.secretbox.open(box, nonce, await getDeviceEncryptionKey());
-    if (!clear) throw new Error("Saved data could not be decrypted on this device.");
-    return naclUtil.encodeUTF8(clear);
+    try {
+      const payload = naclUtil.decodeBase64(raw.slice(7));
+      const nonce = payload.slice(0, nacl.secretbox.nonceLength);
+      const box = payload.slice(nacl.secretbox.nonceLength);
+      const clear = nacl.secretbox.open(box, nonce, await getDeviceEncryptionKey());
+      if (!clear) throw new Error("Authentication failed for encrypted local data.");
+      return naclUtil.encodeUTF8(clear);
+    } catch (_) {
+      // Return an empty value to keep the app usable, but leave the original
+      // ciphertext in place so it is not silently erased during recovery.
+      localStorageRecoveryNeeded = true;
+      return null;
+    }
   },
   async setItem(key, value) {
     const nonce = await Crypto.getRandomBytesAsync(nacl.secretbox.nonceLength);
@@ -65,7 +101,7 @@ const encryptedStorage = {
   async multiGet(keys) { return Promise.all(keys.map(async key => [key, await this.getItem(key)])); },
   async multiSet(items) { await Promise.all(items.map(([key, value]) => this.setItem(key, value))); }
 };
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { storage: encryptedStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false, flowType: "pkce" } });
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { storage: authStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false, flowType: "pkce" } });
 let cloudSyncInProgress = false;
 const UI_TEXT = {
   English: { home:"⌂ Home", explore:"⌖ Explore", discover:"✦ Discover", forYou:"✧ For You", plan:"✎ Plan trip", stays:"⌂ Stays", expenses:"₹ Expenses", analytics:"▥ Insights", saved:"♡ Saved", groups:"♧ Groups", routes:"⌖ Routes", tagline:"Small budget. Big memories.", settings:"Settings", language:"App language", groupTitle:"Group trip planner", groupSubtitle:"Build your travel crew, assign planning roles, and share a portable invite code with friends.", groupName:"Group / trip name", memberName:"Member name", role:"PLANNING ROLE", addMember:"＋ Add group member", shareInvite:"Share group invite ↗", joinCode:"Join with invite code", pasteCode:"Paste a WanderWise invite code", joinGroup:"Join group & import roster", travelCrew:"TRAVEL CREW", members:"member(s) on this device", emptyCrew:"Your travel crew starts here", addCrew:"Add the people travelling with you and choose their planning roles.", privacy:"🔒 Privacy & sharing", privacyCopy:"Invite codes contain only the group name and member names/roles included in the invite. They do not share account credentials, trips, expenses, or location. Imported rosters are saved locally. Live cross-device updates and permission enforcement are not enabled yet.", remove:"Remove", routeEyebrow:"FREE MAPS & ROUTE PREVIEW", routeTitle:"Plan a multi-stop route", routeSubtitle:"Choose places from the WanderWise destination list. We arrange stops to reduce backtracking and draw a road-route preview.", chooseStops:"1. Choose your stops", chooseStopsHelp:"Select up to six destinations. The first selected place is your starting point.", clearStops:"Clear stops", useTripDestination:"Use current trip destination", routeMap:"2. Route map", openRoute:"Open this route in Google Maps ↗" },
@@ -177,7 +213,11 @@ export default function App() {
       if (savedLanguage && UI_TEXT[savedLanguage]) setLanguage(savedLanguage);
       if (members) setGroupMembers(JSON.parse(members));
       if (reminders === "true") setNotificationsEnabled(true);
-    }).catch(() => Alert.alert("Storage notice", "Saved data could not be loaded on this launch."));
+      if (localStorageRecoveryNeeded) Alert.alert(
+        "Local data recovery notice",
+        "Android could not unlock this device's previous encryption key. Your old encrypted trip and expense records have been left untouched, but this installation cannot read them yet. Account sign-in now uses separate app-private storage. Do not clear app data or uninstall if you need those old records."
+      );
+    }).catch(() => Alert.alert("Storage notice", "Some saved data could not be loaded. The original stored records have not been deleted."));
     supabase.auth.getSession().then(({ data }) => { setSession(data.session || null); if (data.session) syncCloudData(data.session); });
     const handleOAuthRedirect = async url => {
       if (!url || !url.startsWith("wanderwise://auth/callback")) return;
