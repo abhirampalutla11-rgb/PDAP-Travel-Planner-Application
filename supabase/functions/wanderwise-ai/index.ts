@@ -24,7 +24,12 @@ Deno.serve(async (req: Request) => {
     if (!message || message.length > 1200) return json({ error: "Message must contain 1–1200 characters." }, 400);
 
     const context = body.context && typeof body.context === "object" ? body.context : {};
-    const history = Array.isArray(body.history) ? body.history.slice(-10) : [];
+    // Gemini conversation history must begin with a user turn. The app's
+    // chat UI starts with a local welcome bubble, not a real Gemini response.
+    const history = Array.isArray(body.history) ? body.history.slice(-10).filter((item: any) =>
+      item && ["user", "assistant"].includes(item.role) && typeof item.content === "string"
+    ) : [];
+    while (history.length && history[0].role !== "user") history.shift();
     const language = ["English", "Telugu", "Hindi", "Tamil"].includes(context.language) ? context.language : "English";
     const systemInstruction = [
       "You are WanderWise AI, a friendly and practical travel-planning companion for budget-conscious travellers.",
@@ -40,9 +45,7 @@ Deno.serve(async (req: Request) => {
     ].join("\n");
 
     const contents = [
-      ...history.filter((item: any) =>
-        item && ["user", "assistant"].includes(item.role) && typeof item.content === "string"
-      ).map((item: any) => ({
+      ...history.map((item: any) => ({
         role: item.role === "assistant" ? "model" : "user",
         parts: [{ text: item.content.slice(0, 1200) }],
       })),
